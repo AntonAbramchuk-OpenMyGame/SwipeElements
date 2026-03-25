@@ -14,5 +14,6 @@ namespace OpenMyGame.Core.Board.Session
         BoardDelta SetCell(BoardCoordinates coordinates, CellData cellData);
 
         BoardDeltaSequence ApplyMove(BoardMove move);
+        BoardDeltaSequence NormalizeWithoutMove();
     }
 }

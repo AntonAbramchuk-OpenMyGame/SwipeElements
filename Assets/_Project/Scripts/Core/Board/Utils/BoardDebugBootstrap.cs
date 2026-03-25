@@ -10,15 +10,15 @@ namespace OpenMyGame.Core.Board.Utils
 {
     public sealed class BoardDebugBootstrap : MonoBehaviour
     {
+        [SerializeField] private bool useNormalizeWithoutMove = true;
+
         private void Start()
         {
-            // Dependencies
             IBoardNormalizer normalizer = new BoardNormalizer();
             IBoardService boardService = new BoardService(normalizer);
             IBoardFactory boardFactory = new BoardFactory();
             IBoardSession boardSession = new BoardSession(boardService, boardFactory);
 
-            // --- INIT FROM CONFIG ---
             LevelConfigData levelConfigData = new()
             {
                 LevelId = "debug_level_001",
@@ -27,12 +27,11 @@ namespace OpenMyGame.Core.Board.Utils
                 Cells = new[]
                 {
                     // top
-                    -1, -1, 0, -1, -1,
+                    0, -1, -1, -1, -1,
                     -1, -1, -1, -1, -1,
-                    -1, -1, 1, -1, -1,
                     -1, -1, -1, -1, -1,
-                    -1, -1, -1, -1, -1
-                    // bottom
+                    0, -1, -1, -1, -1,
+                    0, 0, -1, -1, -1
                 }
             };
 
@@ -41,16 +40,38 @@ namespace OpenMyGame.Core.Board.Utils
             Debug.Log("=== AFTER INIT ===");
             BoardDebugPrinter.Print(boardSession.BoardData);
 
-            // --- APPLY MOVE ---
-            BoardMove move = new(
-                new BoardCoordinates(2, 4),
-                BoardMoveDirection.Down);
+            if (useNormalizeWithoutMove)
+            {
+                Debug.Log("=== NORMALIZE WITHOUT MOVE ===");
 
-            BoardDeltaSequence sequence = boardSession.ApplyMove(move);
+                BoardDeltaSequence sequence = boardSession.NormalizeWithoutMove();
 
-            Debug.Log($"ApplyMove steps count: {sequence.Steps.Count}");
+                Debug.Log($"NormalizeWithoutMove steps count: {sequence.Steps.Count}");
+                PrintSequence(sequence);
 
-            // Лог дельты
+                Debug.Log("=== AFTER NORMALIZE ===");
+                BoardDebugPrinter.Print(boardSession.BoardData);
+            }
+            else
+            {
+                Debug.Log("=== APPLY MOVE ===");
+
+                BoardMove move = new(
+                    new BoardCoordinates(2, 2),
+                    BoardMoveDirection.Right);
+
+                BoardDeltaSequence sequence = boardSession.ApplyMove(move);
+
+                Debug.Log($"ApplyMove steps count: {sequence.Steps.Count}");
+                PrintSequence(sequence);
+
+                Debug.Log("=== AFTER MOVE ===");
+                BoardDebugPrinter.Print(boardSession.BoardData);
+            }
+        }
+
+        private static void PrintSequence(BoardDeltaSequence sequence)
+        {
             for (int i = 0; i < sequence.Steps.Count; i++)
             {
                 BoardDelta step = sequence.Steps[i];
@@ -82,14 +103,16 @@ namespace OpenMyGame.Core.Board.Utils
                             Debug.Log(
                                 $"  Item {j}: Destroy, " +
                                 $"at=({item.From.X}, {item.From.Y}), " +
-                                $"prev={item.PreviousCell.BlockTypeId}");
+                                $"prev={item.PreviousCell.BlockTypeId}, " +
+                                $"curr={item.CurrentCell.BlockTypeId}");
+                            break;
+
+                        default:
+                            Debug.Log($"  Item {j}: Unknown");
                             break;
                     }
                 }
             }
-
-            Debug.Log("=== AFTER MOVE ===");
-            BoardDebugPrinter.Print(boardSession.BoardData);
         }
     }
 }

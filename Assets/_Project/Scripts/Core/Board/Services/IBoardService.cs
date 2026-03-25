@@ -14,5 +14,7 @@ namespace OpenMyGame.Core.Board.Services
             BoardData boardData,
             BoardMove move
         );
+
+        BoardDeltaSequence NormalizeWithoutMove(BoardData boardData);
     }
 }

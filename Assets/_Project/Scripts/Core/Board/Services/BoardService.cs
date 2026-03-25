@@ -13,11 +13,6 @@ namespace OpenMyGame.Core.Board.Services
             _boardNormalizer = boardNormalizer ?? throw new ArgumentNullException(nameof(boardNormalizer));
         }
 
-        public BoardData CreateEmpty(BoardSize size)
-        {
-            return new BoardData(size);
-        }
-
         public BoardDelta SetCell(
             BoardData boardData,
             BoardCoordinates coordinates,
@@ -80,16 +75,12 @@ namespace OpenMyGame.Core.Board.Services
             return sequence;
         }
 
-        private static BoardCoordinates GetTargetCoordinates(BoardMove move)
+        public BoardDeltaSequence NormalizeWithoutMove(BoardData boardData)
         {
-            return move.Direction switch
-            {
-                BoardMoveDirection.Up => new BoardCoordinates(move.Origin.X, move.Origin.Y + 1),
-                BoardMoveDirection.Right => new BoardCoordinates(move.Origin.X + 1, move.Origin.Y),
-                BoardMoveDirection.Down => new BoardCoordinates(move.Origin.X, move.Origin.Y - 1),
-                BoardMoveDirection.Left => new BoardCoordinates(move.Origin.X - 1, move.Origin.Y),
-                _ => throw new ArgumentOutOfRangeException(nameof(move), "Move direction is invalid.")
-            };
+            if (boardData == null)
+                throw new ArgumentNullException(nameof(boardData));
+
+            return _boardNormalizer.Normalize(boardData);
         }
 
         private static bool IsMoveValid(BoardData boardData, BoardMove move)
@@ -108,6 +99,18 @@ namespace OpenMyGame.Core.Board.Services
                 return false;
 
             return true;
+        }
+
+        private static BoardCoordinates GetTargetCoordinates(BoardMove move)
+        {
+            return move.Direction switch
+            {
+                BoardMoveDirection.Up => new BoardCoordinates(move.Origin.X, move.Origin.Y + 1),
+                BoardMoveDirection.Right => new BoardCoordinates(move.Origin.X + 1, move.Origin.Y),
+                BoardMoveDirection.Down => new BoardCoordinates(move.Origin.X, move.Origin.Y - 1),
+                BoardMoveDirection.Left => new BoardCoordinates(move.Origin.X - 1, move.Origin.Y),
+                _ => throw new ArgumentOutOfRangeException(nameof(move), "Move direction is invalid.")
+            };
         }
     }
 }

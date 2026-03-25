@@ -50,5 +50,13 @@ namespace OpenMyGame.Core.Board.Session
 
             return _boardService.ApplyMove(BoardData, move);
         }
+
+        public BoardDeltaSequence NormalizeWithoutMove()
+        {
+            if (!IsInitialized)
+                throw new InvalidOperationException("BoardSession is not initialized.");
+
+            return _boardService.NormalizeWithoutMove(BoardData);
+        }
     }
 }
