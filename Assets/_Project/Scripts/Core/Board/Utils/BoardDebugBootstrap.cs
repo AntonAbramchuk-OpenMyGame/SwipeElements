@@ -26,12 +26,13 @@ namespace OpenMyGame.Core.Board.Utils
                 Height = 5,
                 Cells = new[]
                 {
-                    // ВАЖНО: сверху вниз (как картинка)
-                    -1, -1, -1, -1, -1,
-                    -1, -1, -1, -1, -1,
+                    // top
                     -1, -1, 0, -1, -1,
                     -1, -1, -1, -1, -1,
+                    -1, -1, 1, -1, -1,
+                    -1, -1, -1, -1, -1,
                     -1, -1, -1, -1, -1
+                    // bottom
                 }
             };
 
@@ -42,8 +43,8 @@ namespace OpenMyGame.Core.Board.Utils
 
             // --- APPLY MOVE ---
             BoardMove move = new(
-                new BoardCoordinates(2, 2),
-                BoardMoveDirection.Right);
+                new BoardCoordinates(2, 4),
+                BoardMoveDirection.Down);
 
             BoardDeltaSequence sequence = boardSession.ApplyMove(move);
 
