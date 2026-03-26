@@ -5,20 +5,23 @@ namespace OpenMyGame.Core.Board.Data
     public struct CellData : IEquatable<CellData>
     {
         public const int EmptyBlockTypeId = -1;
+        public const int EmptyBlockId = -1;
 
         public int BlockTypeId;
+        public int BlockId;
 
         public bool IsEmpty => BlockTypeId == EmptyBlockTypeId;
         public bool IsFilled => BlockTypeId != EmptyBlockTypeId;
 
-        public CellData(int blockTypeId)
+        public CellData(int blockTypeId, int blockId)
         {
             BlockTypeId = blockTypeId;
+            BlockId = blockId;
         }
 
         public bool Equals(CellData other)
         {
-            return BlockTypeId == other.BlockTypeId;
+            return BlockTypeId == other.BlockTypeId && BlockId == other.BlockId;
         }
 
         public override bool Equals(object obj)
@@ -28,7 +31,10 @@ namespace OpenMyGame.Core.Board.Data
 
         public override int GetHashCode()
         {
-            return BlockTypeId;
+            unchecked
+            {
+                return (BlockTypeId * 397) ^ BlockId;
+            }
         }
 
         public static bool operator ==(CellData left, CellData right)
@@ -41,14 +47,17 @@ namespace OpenMyGame.Core.Board.Data
             return !left.Equals(right);
         }
 
-        public static CellData Empty => new(EmptyBlockTypeId);
+        public static CellData Empty => new(EmptyBlockTypeId, EmptyBlockId);
 
-        public static CellData CreateFilled(int blockTypeId)
+        public static CellData CreateFilled(int blockTypeId, int blockId)
         {
             if (blockTypeId < 0)
                 throw new ArgumentOutOfRangeException(nameof(blockTypeId), "Filled cell block type id must be >= 0.");
 
-            return new CellData(blockTypeId);
+            if (blockId < 0)
+                throw new ArgumentOutOfRangeException(nameof(blockId), "Filled cell block id must be >= 0.");
+
+            return new CellData(blockTypeId, blockId);
         }
     }
 }

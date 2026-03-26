@@ -10,6 +10,10 @@
         public readonly CellData PreviousCell;
         public readonly CellData CurrentCell;
 
+        public bool IsMove => Type == BoardDeltaItemType.Move;
+        public bool IsSet => Type == BoardDeltaItemType.Set;
+        public bool IsDestroy => Type == BoardDeltaItemType.Destroy;
+
         private BoardDeltaItem(
             BoardDeltaItemType type,
             BoardCoordinates from,
@@ -23,10 +27,6 @@
             PreviousCell = previousCell;
             CurrentCell = currentCell;
         }
-
-        public bool IsMove => Type == BoardDeltaItemType.Move;
-        public bool IsSet => Type == BoardDeltaItemType.Set;
-        public bool IsDestroy => Type == BoardDeltaItemType.Destroy;
 
         public static BoardDeltaItem CreateMove(
             BoardCoordinates from,

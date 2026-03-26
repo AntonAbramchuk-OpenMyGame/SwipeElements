@@ -38,6 +38,7 @@ namespace OpenMyGame.Core.Board.Initialization
             }
 
             CellData[] cells = new CellData[levelConfigData.Cells.Length];
+            int nextBlockId = 0;
 
             // LevelConfigData.Cells are defined top-to-bottom, like a visual picture.
             // BoardData uses bottom-to-top coordinates where y = 0 is the bottom row.
@@ -51,7 +52,15 @@ namespace OpenMyGame.Core.Board.Initialization
                 int runtimeIndex = y * size.Width + x;
                 int blockTypeId = levelConfigData.Cells[i];
 
-                cells[runtimeIndex] = new CellData(blockTypeId);
+                if (blockTypeId < 0)
+                {
+                    cells[runtimeIndex] = CellData.Empty;
+                }
+                else
+                {
+                    cells[runtimeIndex] = CellData.CreateFilled(blockTypeId, nextBlockId);
+                    nextBlockId++;
+                }
             }
 
             return new BoardData(size, cells);
