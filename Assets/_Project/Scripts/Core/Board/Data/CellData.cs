@@ -7,8 +7,8 @@ namespace OpenMyGame.Core.Board.Data
         public const int EmptyBlockTypeId = -1;
         public const int EmptyBlockId = -1;
 
-        public int BlockTypeId;
-        public int BlockId;
+        public readonly int BlockTypeId;
+        public readonly int BlockId;
 
         public bool IsEmpty => BlockTypeId == EmptyBlockTypeId;
         public bool IsFilled => BlockTypeId != EmptyBlockTypeId;
@@ -17,6 +17,16 @@ namespace OpenMyGame.Core.Board.Data
         {
             BlockTypeId = blockTypeId;
             BlockId = blockId;
+        }
+
+        public bool IsMatch(CellData other)
+        {
+            return IsMatch(other.BlockTypeId);
+        }
+
+        public bool IsMatch(int otherTypeId)
+        {
+            return BlockTypeId == otherTypeId;
         }
 
         public bool Equals(CellData other)

@@ -10,8 +10,8 @@
         public readonly CellData PreviousCell;
         public readonly CellData CurrentCell;
 
-        public bool IsMove => Type == BoardDeltaItemType.Move;
         public bool IsSet => Type == BoardDeltaItemType.Set;
+        public bool IsMove => Type == BoardDeltaItemType.Move;
         public bool IsDestroy => Type == BoardDeltaItemType.Destroy;
 
         private BoardDeltaItem(

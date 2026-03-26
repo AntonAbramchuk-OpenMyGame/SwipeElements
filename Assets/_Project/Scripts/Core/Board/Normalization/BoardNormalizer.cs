@@ -115,7 +115,7 @@ namespace OpenMyGame.Core.Board.Normalization
             List<BoardCoordinates> group = new();
             Queue<BoardCoordinates> queue = new();
 
-            CellData groupCell = boardData.GetCell(start);
+            int groupTypeId = boardData.GetCell(start).BlockTypeId;
 
             queue.Enqueue(start);
             visited[boardData.ToIndex(start)] = true;
@@ -125,10 +125,10 @@ namespace OpenMyGame.Core.Board.Normalization
                 BoardCoordinates current = queue.Dequeue();
                 group.Add(current);
 
-                EnqueueNeighbor(boardData, current.X + 1, current.Y, groupCell, visited, queue);
-                EnqueueNeighbor(boardData, current.X - 1, current.Y, groupCell, visited, queue);
-                EnqueueNeighbor(boardData, current.X, current.Y + 1, groupCell, visited, queue);
-                EnqueueNeighbor(boardData, current.X, current.Y - 1, groupCell, visited, queue);
+                EnqueueNeighbor(boardData, current.X + 1, current.Y, groupTypeId, visited, queue);
+                EnqueueNeighbor(boardData, current.X - 1, current.Y, groupTypeId, visited, queue);
+                EnqueueNeighbor(boardData, current.X, current.Y + 1, groupTypeId, visited, queue);
+                EnqueueNeighbor(boardData, current.X, current.Y - 1, groupTypeId, visited, queue);
             }
 
             return group;
@@ -138,7 +138,7 @@ namespace OpenMyGame.Core.Board.Normalization
             BoardData boardData,
             int x,
             int y,
-            CellData groupCell,
+            int groupTypeId,
             bool[] visited,
             Queue<BoardCoordinates> queue)
         {
@@ -152,7 +152,11 @@ namespace OpenMyGame.Core.Board.Normalization
                 return;
 
             CellData cell = boardData.GetCell(coordinates);
-            if (cell != groupCell)
+
+            if (cell.IsEmpty)
+                return;
+
+            if (!cell.IsMatch(groupTypeId))
                 return;
 
             visited[index] = true;

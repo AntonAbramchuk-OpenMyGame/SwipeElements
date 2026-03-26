@@ -24,7 +24,7 @@ namespace OpenMyGame.Core.Board.Services
             if (!boardData.IsInside(coordinates))
                 throw new ArgumentOutOfRangeException(nameof(coordinates), "Coordinates are outside board.");
 
-            BoardDelta delta = new(BoardDeltaType.Unknown);
+            BoardDelta delta = new BoardDelta(BoardDeltaType.Unknown);
 
             CellData previousCell = boardData.GetCell(coordinates);
             boardData.SetCell(coordinates, cellData);
