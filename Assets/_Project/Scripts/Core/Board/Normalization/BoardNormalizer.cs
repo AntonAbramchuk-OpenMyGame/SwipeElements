@@ -5,32 +5,7 @@ namespace OpenMyGame.Core.Board.Normalization
 {
     public sealed class BoardNormalizer : IBoardNormalizer
     {
-        public BoardDeltaSequence Normalize(BoardData boardData)
-        {
-            BoardDeltaSequence sequence = new();
-
-            while (true)
-            {
-                BoardDelta fallDelta = ApplyFall(boardData);
-                if (fallDelta.HasItems)
-                {
-                    sequence.AddStep(fallDelta);
-                }
-
-                BoardDelta destroyDelta = ApplyDestroy(boardData);
-                if (destroyDelta.HasItems)
-                {
-                    sequence.AddStep(destroyDelta);
-                }
-
-                if (!fallDelta.HasItems && !destroyDelta.HasItems)
-                    break;
-            }
-
-            return sequence;
-        }
-
-        private static BoardDelta ApplyFall(BoardData boardData)
+        public BoardDelta BuildFallStep(BoardData boardData)
         {
             BoardDelta delta = new(BoardDeltaType.Fall);
 
@@ -40,6 +15,29 @@ namespace OpenMyGame.Core.Board.Normalization
             for (int x = 0; x < width; x++)
             {
                 ApplyFallToColumn(boardData, x, height, delta);
+            }
+
+            return delta;
+        }
+
+        public BoardDelta BuildDestroyStep(BoardData boardData)
+        {
+            BoardDelta delta = new(BoardDeltaType.Destroy);
+
+            List<List<BoardCoordinates>> destroyableGroups = FindDestroyableGroups(boardData);
+
+            foreach (List<BoardCoordinates> group in destroyableGroups)
+            {
+                foreach (BoardCoordinates coordinates in group)
+                {
+                    CellData previousCell = boardData.GetCell(coordinates);
+
+                    if (previousCell.IsEmpty)
+                        continue;
+
+                    boardData.SetCell(coordinates, CellData.Empty);
+                    delta.AddItem(BoardDeltaItem.CreateDestroy(coordinates, previousCell));
+                }
             }
 
             return delta;
@@ -73,29 +71,6 @@ namespace OpenMyGame.Core.Board.Normalization
 
                 targetY++;
             }
-        }
-
-        private static BoardDelta ApplyDestroy(BoardData boardData)
-        {
-            BoardDelta delta = new(BoardDeltaType.Destroy);
-
-            List<List<BoardCoordinates>> destroyableGroups = FindDestroyableGroups(boardData);
-
-            foreach (List<BoardCoordinates> group in destroyableGroups)
-            {
-                foreach (BoardCoordinates coordinates in group)
-                {
-                    CellData previousCell = boardData.GetCell(coordinates);
-
-                    if (previousCell.IsEmpty)
-                        continue;
-
-                    boardData.SetCell(coordinates, CellData.Empty);
-                    delta.AddItem(BoardDeltaItem.CreateDestroy(coordinates, previousCell));
-                }
-            }
-
-            return delta;
         }
 
         private static List<List<BoardCoordinates>> FindDestroyableGroups(BoardData boardData)

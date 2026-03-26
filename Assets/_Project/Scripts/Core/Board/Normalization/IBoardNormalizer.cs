@@ -4,6 +4,7 @@ namespace OpenMyGame.Core.Board.Normalization
 {
     public interface IBoardNormalizer
     {
-        BoardDeltaSequence Normalize(BoardData boardData);
+        BoardDelta BuildFallStep(BoardData boardData);
+        BoardDelta BuildDestroyStep(BoardData boardData);
     }
 }

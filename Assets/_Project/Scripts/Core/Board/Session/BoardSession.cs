@@ -37,26 +37,32 @@ namespace OpenMyGame.Core.Board.Session
             BoardCoordinates coordinates,
             CellData cellData)
         {
-            if (!IsInitialized)
-                throw new InvalidOperationException("BoardSession is not initialized.");
-
+            EnsureInitialized();
             return _boardService.SetCell(BoardData, coordinates, cellData);
         }
 
-        public BoardDeltaSequence ApplyMove(BoardMove move)
+        public BoardDelta ApplyMoveStep(BoardMove move)
         {
-            if (!IsInitialized)
-                throw new InvalidOperationException("BoardSession is not initialized.");
-
-            return _boardService.ApplyMove(BoardData, move);
+            EnsureInitialized();
+            return _boardService.ApplyMoveStep(BoardData, move);
         }
 
-        public BoardDeltaSequence NormalizeWithoutMove()
+        public BoardDelta BuildFallStep()
+        {
+            EnsureInitialized();
+            return _boardService.BuildFallStep(BoardData);
+        }
+
+        public BoardDelta BuildDestroyStep()
+        {
+            EnsureInitialized();
+            return _boardService.BuildDestroyStep(BoardData);
+        }
+
+        private void EnsureInitialized()
         {
             if (!IsInitialized)
                 throw new InvalidOperationException("BoardSession is not initialized.");
-
-            return _boardService.NormalizeWithoutMove(BoardData);
         }
     }
 }

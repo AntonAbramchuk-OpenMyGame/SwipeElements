@@ -10,11 +10,13 @@ namespace OpenMyGame.Core.Board.Services
             CellData cellData
         );
 
-        BoardDeltaSequence ApplyMove(
+        BoardDelta ApplyMoveStep(
             BoardData boardData,
             BoardMove move
         );
 
-        BoardDeltaSequence NormalizeWithoutMove(BoardData boardData);
+        BoardDelta BuildFallStep(BoardData boardData);
+
+        BoardDelta BuildDestroyStep(BoardData boardData);
     }
 }

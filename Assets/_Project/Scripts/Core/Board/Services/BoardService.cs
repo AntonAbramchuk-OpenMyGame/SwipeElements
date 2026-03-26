@@ -37,19 +37,17 @@ namespace OpenMyGame.Core.Board.Services
             return delta;
         }
 
-        public BoardDeltaSequence ApplyMove(
+        public BoardDelta ApplyMoveStep(
             BoardData boardData,
-            BoardMove move
-        )
+            BoardMove move)
         {
             if (boardData == null)
                 throw new ArgumentNullException(nameof(boardData));
 
             if (!IsMoveValid(boardData, move))
-                return new BoardDeltaSequence();
+                return new BoardDelta(BoardDeltaType.Move);
 
-            BoardDeltaSequence sequence = new();
-            BoardDelta swapDelta = new(BoardDeltaType.Swap);
+            BoardDelta moveDelta = new(BoardDeltaType.Move);
 
             BoardCoordinates target = GetTargetCoordinates(move);
 
@@ -60,27 +58,32 @@ namespace OpenMyGame.Core.Board.Services
             boardData.SetCell(target, originCell);
 
             if (!originCell.IsEmpty)
-                swapDelta.AddItem(BoardDeltaItem.CreateMove(move.Origin, target, originCell));
+            {
+                moveDelta.AddItem(BoardDeltaItem.CreateMove(move.Origin, target, originCell));
+            }
 
             if (!targetCell.IsEmpty)
-                swapDelta.AddItem(BoardDeltaItem.CreateMove(target, move.Origin, targetCell));
+            {
+                moveDelta.AddItem(BoardDeltaItem.CreateMove(target, move.Origin, targetCell));
+            }
 
-            sequence.AddStep(swapDelta);
-
-            BoardDeltaSequence normalizationSequence = _boardNormalizer.Normalize(boardData);
-
-            foreach (BoardDelta step in normalizationSequence.Steps)
-                sequence.AddStep(step);
-
-            return sequence;
+            return moveDelta;
         }
 
-        public BoardDeltaSequence NormalizeWithoutMove(BoardData boardData)
+        public BoardDelta BuildFallStep(BoardData boardData)
         {
             if (boardData == null)
                 throw new ArgumentNullException(nameof(boardData));
 
-            return _boardNormalizer.Normalize(boardData);
+            return _boardNormalizer.BuildFallStep(boardData);
+        }
+
+        public BoardDelta BuildDestroyStep(BoardData boardData)
+        {
+            if (boardData == null)
+                throw new ArgumentNullException(nameof(boardData));
+
+            return _boardNormalizer.BuildDestroyStep(boardData);
         }
 
         private static bool IsMoveValid(BoardData boardData, BoardMove move)
