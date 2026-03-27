@@ -1,0 +1,22 @@
+{
+    "name": "OpenMyGame.Core.Bootstrap",
+    "rootNamespace": "OpenMyGame.Core.Bootstrap",
+    "references": [
+        "OpenMyGame.Core.Level.Data",
+        "OpenMyGame.Core.Board.Data",
+        "OpenMyGame.Core.Board.Logic",
+        "OpenMyGame.Core.Board.Logic.Abstractions",
+        "OpenMyGame.Core.Board.View",
+        "OpenMyGame.Core.Board.View.Abstractions",
+        "OpenMyGame.Core.Board.Utils"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

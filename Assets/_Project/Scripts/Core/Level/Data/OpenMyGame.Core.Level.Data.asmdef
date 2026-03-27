@@ -1,0 +1,14 @@
+{
+    "name": "OpenMyGame.Core.Level.Data",
+    "rootNamespace": "OpenMyGame.Core.Level.Data",
+    "references": [],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

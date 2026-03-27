@@ -1,6 +1,6 @@
 ﻿using OpenMyGame.Core.Board.Data;
 
-namespace OpenMyGame.Core.Board.Services
+namespace OpenMyGame.Core.Board.Logic.Abstractions
 {
     public interface IBoardService
     {

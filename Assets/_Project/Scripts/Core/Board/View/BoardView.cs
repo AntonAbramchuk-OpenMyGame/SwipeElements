@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using OpenMyGame.Core.Board.Data;
-using OpenMyGame.Core.Board.Runtime;
+using OpenMyGame.Core.Board.Logic.Abstractions;
+using OpenMyGame.Core.Board.View.Abstractions;
 using UnityEngine;
 using UnityEngine.EventSystems;
 

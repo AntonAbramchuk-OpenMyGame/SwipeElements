@@ -1,0 +1,18 @@
+{
+    "name": "OpenMyGame.Core.Board.View",
+    "rootNamespace": "OpenMyGame.Core.Board.View",
+    "references": [
+        "OpenMyGame.Core.Board.Data",
+        "OpenMyGame.Core.Board.Logic.Abstractions",
+        "OpenMyGame.Core.Board.View.Abstractions"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

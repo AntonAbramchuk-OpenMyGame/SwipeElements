@@ -1,14 +1,12 @@
 ﻿using OpenMyGame.Core.Board.Data;
-using OpenMyGame.Core.Board.Initialization;
-using OpenMyGame.Core.Board.Normalization;
-using OpenMyGame.Core.Board.Runtime;
-using OpenMyGame.Core.Board.Services;
-using OpenMyGame.Core.Board.Session;
+using OpenMyGame.Core.Board.Logic;
+using OpenMyGame.Core.Board.Logic.Abstractions;
+using OpenMyGame.Core.Board.Utils;
 using OpenMyGame.Core.Board.View;
 using OpenMyGame.Core.Level.Data;
 using UnityEngine;
 
-namespace OpenMyGame.Core.Board.Utils
+namespace OpenMyGame.Core.Bootstrap
 {
     public sealed class BoardDebugBootstrap : MonoBehaviour
     {

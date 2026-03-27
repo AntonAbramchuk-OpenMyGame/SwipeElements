@@ -1,6 +1,6 @@
 ﻿using OpenMyGame.Core.Board.Data;
 
-namespace OpenMyGame.Core.Board.View
+namespace OpenMyGame.Core.Board.View.Abstractions
 {
     public interface IBoardStepView
     {

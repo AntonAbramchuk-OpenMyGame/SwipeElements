@@ -1,7 +1,8 @@
 ﻿using System.Collections.Generic;
 using OpenMyGame.Core.Board.Data;
+using OpenMyGame.Core.Board.Logic.Abstractions;
 
-namespace OpenMyGame.Core.Board.Normalization
+namespace OpenMyGame.Core.Board.Logic
 {
     public sealed class BoardNormalizer : IBoardNormalizer
     {

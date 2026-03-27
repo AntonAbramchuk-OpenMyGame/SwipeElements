@@ -1,10 +1,9 @@
 ﻿using System;
 using OpenMyGame.Core.Board.Data;
-using OpenMyGame.Core.Board.Initialization;
-using OpenMyGame.Core.Board.Services;
+using OpenMyGame.Core.Board.Logic.Abstractions;
 using OpenMyGame.Core.Level.Data;
 
-namespace OpenMyGame.Core.Board.Session
+namespace OpenMyGame.Core.Board.Logic
 {
     public sealed class BoardSession : IBoardSession
     {

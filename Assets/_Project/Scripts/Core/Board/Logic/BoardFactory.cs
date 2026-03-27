@@ -1,8 +1,9 @@
 ﻿using System;
 using OpenMyGame.Core.Board.Data;
+using OpenMyGame.Core.Board.Logic.Abstractions;
 using OpenMyGame.Core.Level.Data;
 
-namespace OpenMyGame.Core.Board.Initialization
+namespace OpenMyGame.Core.Board.Logic
 {
     public sealed class BoardFactory : IBoardFactory
     {

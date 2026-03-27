@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace OpenMyGame.Core.Board.Runtime
+namespace OpenMyGame.Core.Board.Logic.Abstractions
 {
     public interface IBoardInput
     {

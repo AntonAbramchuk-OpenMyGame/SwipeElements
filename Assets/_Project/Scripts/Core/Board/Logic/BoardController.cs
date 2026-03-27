@@ -1,10 +1,10 @@
 ﻿using System.Collections.Generic;
 using OpenMyGame.Core.Board.Data;
-using OpenMyGame.Core.Board.Session;
+using OpenMyGame.Core.Board.Logic.Abstractions;
 using OpenMyGame.Core.Board.Utils;
-using OpenMyGame.Core.Board.View;
+using OpenMyGame.Core.Board.View.Abstractions;
 
-namespace OpenMyGame.Core.Board.Runtime
+namespace OpenMyGame.Core.Board.Logic
 {
     public sealed class BoardController : IBoardController
     {

@@ -1,8 +1,8 @@
 ﻿using OpenMyGame.Core.Board.Data;
-using OpenMyGame.Core.Board.Session;
+using OpenMyGame.Core.Board.Logic.Abstractions;
 using UnityEngine;
 
-namespace OpenMyGame.Core.Board.Runtime
+namespace OpenMyGame.Core.Board.Logic
 {
     public sealed class BoardInput : IBoardInput
     {

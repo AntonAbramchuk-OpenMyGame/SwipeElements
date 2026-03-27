@@ -1,8 +1,8 @@
 ﻿using System;
 using OpenMyGame.Core.Board.Data;
-using OpenMyGame.Core.Board.Normalization;
+using OpenMyGame.Core.Board.Logic.Abstractions;
 
-namespace OpenMyGame.Core.Board.Services
+namespace OpenMyGame.Core.Board.Logic
 {
     public sealed class BoardService : IBoardService
     {
