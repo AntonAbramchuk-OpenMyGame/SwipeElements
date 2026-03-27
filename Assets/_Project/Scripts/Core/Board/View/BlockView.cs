@@ -1,4 +1,5 @@
 ﻿using System;
+using DG.Tweening;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -43,6 +44,40 @@ namespace OpenMyGame.Core.Board.View
         public void PlayDestroy()
         {
             gameObject.SetActive(false);
+        }
+
+        public Tween PlayMove(Vector3 targetPosition, float duration)
+        {
+            KillTweens();
+
+            return transform.DOMove(targetPosition, duration)
+                .SetEase(Ease.OutQuad)
+                .SetTarget(this);
+        }
+
+        public Tween PlayFall(Vector3 targetPosition, float duration)
+        {
+            KillTweens();
+
+            return transform.DOMove(targetPosition, duration)
+                .SetEase(Ease.InQuad)
+                .SetTarget(this);
+        }
+
+        public void Release()
+        {
+            KillTweens();
+            Destroy(gameObject);
+        }
+
+        public void KillTweens()
+        {
+            DOTween.Kill(this);
+        }
+
+        private void OnDisable()
+        {
+            KillTweens();
         }
 
         void IPointerDownHandler.OnPointerDown(PointerEventData eventData)

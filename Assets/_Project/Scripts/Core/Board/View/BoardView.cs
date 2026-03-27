@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using DG.Tweening;
 using OpenMyGame.Core.Board.Data;
 using OpenMyGame.Core.Board.Logic.Abstractions;
 using OpenMyGame.Core.Board.View.Abstractions;
@@ -9,6 +11,9 @@ namespace OpenMyGame.Core.Board.View
 {
     public sealed class BoardView : MonoBehaviour, IBoardStepView
     {
+        private const float MoveDuration = 0.3f;
+        private const float FallSpeed = 8.0f;
+
         [Header("Refs")] [SerializeField] private Transform blocksRoot;
         [SerializeField] private BlockView blockViewPrefab;
 
@@ -18,8 +23,6 @@ namespace OpenMyGame.Core.Board.View
         private readonly Dictionary<int, BlockView> _blockViewsById = new();
 
         private IBoardInput _boardInput;
-
-        public int ActiveBlockViewCount => _blockViewsById.Count;
 
         public void Construct(IBoardInput boardInput)
         {
@@ -45,10 +48,17 @@ namespace OpenMyGame.Core.Board.View
             }
         }
 
-        public void ApplyMoveStep(BoardDelta delta, System.Action<BoardDelta> onCompleted)
+        public void ApplyMoveStep(BoardDelta delta, Action<BoardDelta> onCompleted)
         {
-            foreach (BoardDeltaItem item in delta.Items)
+            TweenBatchCompletion completion = new(delta, onCompleted);
+
+            for (int i = 0; i < delta.Items.Count; i++)
             {
+                BoardDeltaItem item = delta.Items[i];
+
+                if (!item.IsMove)
+                    continue;
+
                 int blockId = item.CurrentCell.BlockId;
 
                 if (!_blockViewsById.TryGetValue(blockId, out BlockView blockView))
@@ -57,16 +67,26 @@ namespace OpenMyGame.Core.Board.View
                     continue;
                 }
 
-                blockView.SetPosition(GetBlockWorldPosition(item.To));
+                Vector3 targetPosition = GetBlockWorldPosition(item.To);
+                Tween tween = blockView.PlayMove(targetPosition, MoveDuration);
+
+                completion.RegisterTween(tween);
             }
 
-            onCompleted?.Invoke(delta);
+            completion.CompleteImmediatelyIfEmpty();
         }
 
-        public void ApplyFallStep(BoardDelta delta, System.Action<BoardDelta> onCompleted)
+        public void ApplyFallStep(BoardDelta delta, Action<BoardDelta> onCompleted)
         {
-            foreach (BoardDeltaItem item in delta.Items)
+            TweenBatchCompletion completion = new(delta, onCompleted);
+
+            for (int i = 0; i < delta.Items.Count; i++)
             {
+                BoardDeltaItem item = delta.Items[i];
+
+                if (!item.IsMove)
+                    continue;
+
                 int blockId = item.CurrentCell.BlockId;
 
                 if (!_blockViewsById.TryGetValue(blockId, out BlockView blockView))
@@ -75,13 +95,27 @@ namespace OpenMyGame.Core.Board.View
                     continue;
                 }
 
-                blockView.SetPosition(GetBlockWorldPosition(item.To));
+                Vector3 targetPosition = GetBlockWorldPosition(item.To);
+                Vector3 currentPosition = blockView.transform.position;
+
+                float distance = Vector3.Distance(currentPosition, targetPosition);
+
+                if (distance <= 0.0f)
+                {
+                    blockView.SetPosition(targetPosition);
+                    continue;
+                }
+
+                float duration = Mathf.Max(0.05f, distance / FallSpeed);
+                Tween tween = blockView.PlayFall(targetPosition, duration);
+
+                completion.RegisterTween(tween);
             }
 
-            onCompleted?.Invoke(delta);
+            completion.CompleteImmediatelyIfEmpty();
         }
 
-        public void ApplyDestroyStep(BoardDelta delta, System.Action<BoardDelta> onCompleted)
+        public void ApplyDestroyStep(BoardDelta delta, Action<BoardDelta> onCompleted)
         {
             foreach (BoardDeltaItem item in delta.Items)
             {
@@ -99,11 +133,6 @@ namespace OpenMyGame.Core.Board.View
             }
 
             onCompleted?.Invoke(delta);
-        }
-
-        public bool TryGetBlockView(int blockId, out BlockView blockView)
-        {
-            return _blockViewsById.TryGetValue(blockId, out blockView);
         }
 
         private void CreateBlockView(CellData cellData, BoardCoordinates coord)
@@ -129,7 +158,7 @@ namespace OpenMyGame.Core.Board.View
                 if (pair.Value)
                 {
                     UnsubscribeFromBlock(pair.Value);
-                    Destroy(pair.Value.gameObject);
+                    pair.Value.Release();
                 }
             }
 
@@ -172,6 +201,61 @@ namespace OpenMyGame.Core.Board.View
                 boardOrigin.y + coord.Y * cellSize,
                 0.0f
             );
+        }
+
+        private sealed class TweenBatchCompletion
+        {
+            private readonly BoardDelta _delta;
+            private readonly Action<BoardDelta> _onCompleted;
+
+            private int _remaining;
+            private bool _completed;
+
+            public TweenBatchCompletion(BoardDelta delta, Action<BoardDelta> onCompleted)
+            {
+                _delta = delta;
+                _onCompleted = onCompleted;
+            }
+
+            public void RegisterTween(Tween tween)
+            {
+                _remaining++;
+
+                bool finished = false;
+
+                void MarkFinished()
+                {
+                    if (finished)
+                        return;
+
+                    finished = true;
+                    _remaining--;
+
+                    if (_completed)
+                        return;
+
+                    if (_remaining > 0)
+                        return;
+
+                    _completed = true;
+                    _onCompleted?.Invoke(_delta);
+                }
+
+                tween.OnComplete(MarkFinished);
+                tween.OnKill(MarkFinished);
+            }
+
+            public void CompleteImmediatelyIfEmpty()
+            {
+                if (_completed)
+                    return;
+
+                if (_remaining > 0)
+                    return;
+
+                _completed = true;
+                _onCompleted?.Invoke(_delta);
+            }
         }
     }
 }
