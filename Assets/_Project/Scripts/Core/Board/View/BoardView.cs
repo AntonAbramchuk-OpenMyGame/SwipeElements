@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
 using OpenMyGame.Core.Board.Data;
+using OpenMyGame.Core.Board.Runtime;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 namespace OpenMyGame.Core.Board.View
 {
@@ -14,7 +16,14 @@ namespace OpenMyGame.Core.Board.View
 
         private readonly Dictionary<int, BlockView> _blockViewsById = new();
 
+        private IBoardInput _boardInput;
+
         public int ActiveBlockViewCount => _blockViewsById.Count;
+
+        public void Construct(IBoardInput boardInput)
+        {
+            _boardInput = boardInput;
+        }
 
         public void Build(BoardData boardData)
         {
@@ -47,7 +56,7 @@ namespace OpenMyGame.Core.Board.View
                     continue;
                 }
 
-                blockView.SetPosition(GetWorldPosition(item.To));
+                blockView.SetPosition(GetBlockWorldPosition(item.To));
             }
 
             onCompleted?.Invoke(delta);
@@ -65,7 +74,7 @@ namespace OpenMyGame.Core.Board.View
                     continue;
                 }
 
-                blockView.SetPosition(GetWorldPosition(item.To));
+                blockView.SetPosition(GetBlockWorldPosition(item.To));
             }
 
             onCompleted?.Invoke(delta);
@@ -106,8 +115,9 @@ namespace OpenMyGame.Core.Board.View
 
             BlockView blockView = Instantiate(blockViewPrefab, blocksRoot);
             blockView.Initialize(cellData.BlockTypeId, cellData.BlockId);
-            blockView.SetPosition(GetWorldPosition(coord));
+            blockView.SetPosition(GetBlockWorldPosition(coord));
 
+            SubscribeToBlock(blockView);
             _blockViewsById.Add(cellData.BlockId, blockView);
         }
 
@@ -116,18 +126,51 @@ namespace OpenMyGame.Core.Board.View
             foreach (var pair in _blockViewsById)
             {
                 if (pair.Value)
+                {
+                    UnsubscribeFromBlock(pair.Value);
                     Destroy(pair.Value.gameObject);
+                }
             }
 
             _blockViewsById.Clear();
         }
 
-        private Vector3 GetWorldPosition(BoardCoordinates coord)
+        private void SubscribeToBlock(BlockView blockView)
+        {
+            blockView.PointerDownEvent += OnBlockPointerDown;
+            blockView.DragEvent += OnBlockDrag;
+            blockView.PointerUpEvent += OnBlockPointerUp;
+        }
+
+        private void UnsubscribeFromBlock(BlockView blockView)
+        {
+            blockView.PointerDownEvent -= OnBlockPointerDown;
+            blockView.DragEvent -= OnBlockDrag;
+            blockView.PointerUpEvent -= OnBlockPointerUp;
+        }
+
+        private void OnBlockPointerDown(int blockId, PointerEventData eventData)
+        {
+            _boardInput?.OnBlockPointerDown(blockId, eventData.position);
+        }
+
+        private void OnBlockDrag(int blockId, PointerEventData eventData)
+        {
+            _boardInput?.OnBlockDrag(blockId, eventData.position);
+        }
+
+        private void OnBlockPointerUp(int blockId, PointerEventData eventData)
+        {
+            _boardInput?.OnBlockPointerUp(blockId, eventData.position);
+        }
+
+        private Vector3 GetBlockWorldPosition(BoardCoordinates coord)
         {
             return new Vector3(
                 boardOrigin.x + coord.X * cellSize,
                 boardOrigin.y + coord.Y * cellSize,
-                0f);
+                0.0f
+            );
         }
     }
 }

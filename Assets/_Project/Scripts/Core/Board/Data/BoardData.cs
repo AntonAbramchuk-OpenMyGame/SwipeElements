@@ -11,6 +11,12 @@ namespace OpenMyGame.Core.Board.Data
         public int Width => Size.Width;
         public int Height => Size.Height;
 
+        public CellData this[int index]
+        {
+            get => _cells[index];
+            set => _cells[index] = value;
+        }
+
         public CellData this[int x, int y]
         {
             get => _cells[y * Width + x];
@@ -49,6 +55,19 @@ namespace OpenMyGame.Core.Board.Data
         {
             ValidateCoordinates(coordinates);
             return _cells[ToIndex(coordinates)];
+        }
+
+        public int IndexByID(int id)
+        {
+            for (var i = 0; i < _cells.Length; i++)
+            {
+                var cell = _cells[i];
+
+                if (cell.BlockId == id)
+                    return i;
+            }
+
+            return -1;
         }
 
         public void SetCell(BoardCoordinates coordinates, CellData cell)

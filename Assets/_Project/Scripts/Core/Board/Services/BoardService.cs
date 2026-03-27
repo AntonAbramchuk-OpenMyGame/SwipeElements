@@ -49,7 +49,7 @@ namespace OpenMyGame.Core.Board.Services
 
             BoardDelta moveDelta = new(BoardDeltaType.Move);
 
-            BoardCoordinates target = GetTargetCoordinates(move);
+            BoardCoordinates target = move.GetTargetCoordinates();
 
             CellData originCell = boardData.GetCell(move.Origin);
             CellData targetCell = boardData.GetCell(target);
@@ -91,7 +91,7 @@ namespace OpenMyGame.Core.Board.Services
             if (!boardData.IsInside(move.Origin))
                 return false;
 
-            BoardCoordinates target = GetTargetCoordinates(move);
+            BoardCoordinates target = move.GetTargetCoordinates();
 
             if (!boardData.IsInside(target))
                 return false;
@@ -102,18 +102,6 @@ namespace OpenMyGame.Core.Board.Services
                 return false;
 
             return true;
-        }
-
-        private static BoardCoordinates GetTargetCoordinates(BoardMove move)
-        {
-            return move.Direction switch
-            {
-                BoardMoveDirection.Up => new BoardCoordinates(move.Origin.X, move.Origin.Y + 1),
-                BoardMoveDirection.Right => new BoardCoordinates(move.Origin.X + 1, move.Origin.Y),
-                BoardMoveDirection.Down => new BoardCoordinates(move.Origin.X, move.Origin.Y - 1),
-                BoardMoveDirection.Left => new BoardCoordinates(move.Origin.X - 1, move.Origin.Y),
-                _ => throw new ArgumentOutOfRangeException(nameof(move), "Move direction is invalid.")
-            };
         }
     }
 }

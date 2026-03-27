@@ -1,9 +1,15 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
+using UnityEngine.EventSystems;
 
 namespace OpenMyGame.Core.Board.View
 {
-    public sealed class BlockView : MonoBehaviour
+    public sealed class BlockView : MonoBehaviour, IPointerDownHandler, IDragHandler, IPointerUpHandler
     {
+        public event Action<int, PointerEventData> PointerDownEvent;
+        public event Action<int, PointerEventData> DragEvent;
+        public event Action<int, PointerEventData> PointerUpEvent;
+
         [SerializeField] private SpriteRenderer spriteRenderer;
 
         public int BlockTypeId { get; private set; }
@@ -24,12 +30,9 @@ namespace OpenMyGame.Core.Board.View
                     break;
             }
 
+#if UNITY_EDITOR
             gameObject.name = $"Block ({BlockId})";
-        }
-
-        public void SetDebugCoordinates(int x, int y)
-        {
-            gameObject.name += $"({x},{y})";
+#endif
         }
 
         public void SetPosition(Vector3 position)
@@ -40,6 +43,21 @@ namespace OpenMyGame.Core.Board.View
         public void PlayDestroy()
         {
             gameObject.SetActive(false);
+        }
+
+        void IPointerDownHandler.OnPointerDown(PointerEventData eventData)
+        {
+            PointerDownEvent?.Invoke(BlockId, eventData);
+        }
+
+        void IDragHandler.OnDrag(PointerEventData eventData)
+        {
+            DragEvent?.Invoke(BlockId, eventData);
+        }
+
+        void IPointerUpHandler.OnPointerUp(PointerEventData eventData)
+        {
+            PointerUpEvent?.Invoke(BlockId, eventData);
         }
     }
 }

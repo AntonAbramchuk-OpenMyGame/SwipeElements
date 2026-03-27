@@ -6,7 +6,7 @@ using OpenMyGame.Core.Board.View;
 
 namespace OpenMyGame.Core.Board.Runtime
 {
-    public sealed class BoardController
+    public sealed class BoardController : IBoardController
     {
         private readonly IBoardSession _boardSession;
         private readonly IBoardStepView _boardStepView;
@@ -97,7 +97,7 @@ namespace OpenMyGame.Core.Board.Runtime
             if (!BoardData.IsInside(move.Origin))
                 return false;
 
-            BoardCoordinates target = GetTargetCoordinates(move);
+            BoardCoordinates target = move.GetTargetCoordinates();
 
             if (!BoardData.IsInside(target))
                 return false;
@@ -371,18 +371,6 @@ namespace OpenMyGame.Core.Board.Runtime
                     _boardStepView.ApplyDestroyStep(delta, onCompleted);
                     break;
             }
-        }
-
-        private static BoardCoordinates GetTargetCoordinates(BoardMove move)
-        {
-            return move.Direction switch
-            {
-                BoardMoveDirection.Up => new BoardCoordinates(move.Origin.X, move.Origin.Y + 1),
-                BoardMoveDirection.Right => new BoardCoordinates(move.Origin.X + 1, move.Origin.Y),
-                BoardMoveDirection.Down => new BoardCoordinates(move.Origin.X, move.Origin.Y - 1),
-                BoardMoveDirection.Left => new BoardCoordinates(move.Origin.X - 1, move.Origin.Y),
-                _ => move.Origin
-            };
         }
     }
 }

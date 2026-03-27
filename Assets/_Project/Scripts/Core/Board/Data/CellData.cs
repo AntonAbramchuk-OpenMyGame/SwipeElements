@@ -11,7 +11,6 @@ namespace OpenMyGame.Core.Board.Data
         public readonly int BlockId;
 
         public bool IsEmpty => BlockTypeId == EmptyBlockTypeId;
-        public bool IsFilled => BlockTypeId != EmptyBlockTypeId;
 
         public CellData(int blockTypeId, int blockId)
         {
