@@ -9,6 +9,7 @@ namespace OpenMyGame.Core.Board.Logic
     public sealed class BoardController : IBoardController
     {
         private readonly IBoardSession _boardSession;
+        private readonly ILevelWinCondition _levelWinCondition;
         private readonly IBoardStepView _boardStepView;
 
         private readonly Queue<BoardMove> _pendingMoves = new();
@@ -17,18 +18,28 @@ namespace OpenMyGame.Core.Board.Logic
         private int _activeMoveCount;
         private int _activeFallCount;
         private int _activeDestroyCount;
+        private bool _isLevelCompleted;
 
         public BoardData BoardData => _boardSession.BoardData;
 
-        public BoardController(IBoardSession boardSession, IBoardStepView boardStepView)
+        public BoardController(
+            IBoardSession boardSession,
+            ILevelWinCondition levelWinCondition,
+            IBoardStepView boardStepView
+        )
         {
             _boardSession = boardSession;
+            _levelWinCondition = levelWinCondition;
             _boardStepView = boardStepView;
         }
 
         public void EnqueueMove(BoardMove move)
         {
+            if (_isLevelCompleted)
+                return;
+
             _pendingMoves.Enqueue(move);
+
             TryAdvanceLogic();
         }
 
@@ -62,7 +73,12 @@ namespace OpenMyGame.Core.Board.Logic
             {
                 UnityEngine.Debug.Log("[Controller] About to try extra fall");
                 TryStartFall();
+
+                if (_activeFallCount > 0)
+                    return;
             }
+
+            TryHandleLevelCompleted();
         }
 
         private void ProcessPendingMoves()
@@ -149,6 +165,24 @@ namespace OpenMyGame.Core.Board.Logic
             _activeDestroyCount++;
 
             PlayDelta(destroyDelta, OnDestroyCompleted);
+        }
+
+        private void TryHandleLevelCompleted()
+        {
+            if (_isLevelCompleted ||
+                _pendingMoves.Count > 0 ||
+                _activeMoveCount > 0 ||
+                _activeFallCount > 0 ||
+                _activeDestroyCount > 0)
+            {
+                return;
+            }
+
+            if (!_levelWinCondition.IsCompleted(BoardData))
+                return;
+
+            _isLevelCompleted = true;
+            UnityEngine.Debug.Log("[Controller] LEVEL COMPLETED");
         }
 
         private void OnMoveCompleted(BoardDelta delta)

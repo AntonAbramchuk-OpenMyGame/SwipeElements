@@ -28,24 +28,32 @@ namespace OpenMyGame.Core.Bootstrap
 
         [SerializeField] private BoardView boardView;
 
-        private IBoardNormalizer _boardNormalizer;
-        private IBoardService _boardService;
         private IBoardFactory _boardFactory;
+        private IBoardNormalizer _boardNormalizer;
+        private ILevelWinCondition _levelWinCondition;
+        private IBoardService _boardService;
+
         private IBoardSession _boardSession;
         private IBoardController _boardController;
         private IBoardInput _boardInput;
 
-        private void Start()
+        private void Awake()
         {
-            _boardNormalizer = new BoardNormalizer();
-            _boardService = new BoardService(_boardNormalizer);
             _boardFactory = new BoardFactory();
+            _boardNormalizer = new BoardNormalizer();
+            _levelWinCondition = new LevelWinCondition();
+            _boardService = new BoardService(_boardNormalizer);
+        }
+
+        private void OnEnable()
+        {
             _boardSession = new BoardSession(_boardService, _boardFactory);
-            _boardController = new BoardController(_boardSession, boardView);
+            _boardController = new BoardController(_boardSession, _levelWinCondition, boardView);
             _boardInput = new BoardInput(_boardController, _boardSession);
-            boardView.Construct(_boardInput);
 
             _boardSession.Initialize(_levelConfigData);
+
+            boardView.Reinit(_boardInput);
             boardView.Build(_boardSession.BoardData);
 
             Debug.Log("=== AFTER INIT ===");

@@ -11,12 +11,12 @@ namespace OpenMyGame.Core.Board.Logic
         private readonly IBoardFactory _boardFactory;
 
         public BoardData BoardData { get; private set; }
-
         public bool IsInitialized => BoardData != null;
 
         public BoardSession(
             IBoardService boardService,
-            IBoardFactory boardFactory)
+            IBoardFactory boardFactory
+        )
         {
             _boardService = boardService ?? throw new ArgumentNullException(nameof(boardService));
             _boardFactory = boardFactory ?? throw new ArgumentNullException(nameof(boardFactory));
@@ -25,14 +25,6 @@ namespace OpenMyGame.Core.Board.Logic
         public void Initialize(LevelConfigData levelConfigData)
         {
             BoardData = _boardFactory.CreateFromConfig(levelConfigData);
-        }
-
-        public BoardDelta SetCell(
-            BoardCoordinates coordinates,
-            CellData cellData)
-        {
-            EnsureInitialized();
-            return _boardService.SetCell(BoardData, coordinates, cellData);
         }
 
         public BoardDelta ApplyMoveStep(BoardMove move)

@@ -11,33 +11,6 @@ namespace OpenMyGame.Core.Board.Data
         public int Width => Size.Width;
         public int Height => Size.Height;
 
-        public CellData this[int index]
-        {
-            get => _cells[index];
-            set => _cells[index] = value;
-        }
-
-        public CellData this[int x, int y]
-        {
-            get => _cells[y * Width + x];
-            set => _cells[y * Width + x] = value;
-        }
-
-        public CellData this[BoardCoordinates coordinates]
-        {
-            get => GetCell(coordinates);
-            set => SetCell(coordinates, value);
-        }
-
-        public BoardData(BoardSize size)
-        {
-            Size = size;
-            _cells = new CellData[size.CellCount];
-
-            for (int i = 0; i < _cells.Length; i++)
-                _cells[i] = CellData.Empty;
-        }
-
         public BoardData(BoardSize size, CellData[] cells)
         {
             if (cells == null)

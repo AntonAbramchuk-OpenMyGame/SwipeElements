@@ -13,30 +13,6 @@ namespace OpenMyGame.Core.Board.Logic
             _boardNormalizer = boardNormalizer ?? throw new ArgumentNullException(nameof(boardNormalizer));
         }
 
-        public BoardDelta SetCell(
-            BoardData boardData,
-            BoardCoordinates coordinates,
-            CellData cellData)
-        {
-            if (boardData == null)
-                throw new ArgumentNullException(nameof(boardData));
-
-            if (!boardData.IsInside(coordinates))
-                throw new ArgumentOutOfRangeException(nameof(coordinates), "Coordinates are outside board.");
-
-            BoardDelta delta = new BoardDelta(BoardDeltaType.Unknown);
-
-            CellData previousCell = boardData.GetCell(coordinates);
-            boardData.SetCell(coordinates, cellData);
-
-            if (previousCell != cellData)
-            {
-                delta.AddItem(BoardDeltaItem.CreateSet(coordinates, previousCell, cellData));
-            }
-
-            return delta;
-        }
-
         public BoardDelta ApplyMoveStep(
             BoardData boardData,
             BoardMove move)

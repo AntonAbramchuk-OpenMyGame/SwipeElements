@@ -30,14 +30,14 @@ namespace OpenMyGame.Core.Board.View
         private IBoardInput _boardInput;
         private BoardSize _boardSize;
 
-        public void Construct(IBoardInput boardInput)
-        {
-            _boardInput = boardInput;
-        }
-
         private void Awake()
         {
             CollectBlockPrefabsByType();
+        }
+
+        public void Reinit(IBoardInput boardInput)
+        {
+            _boardInput = boardInput;
         }
 
         public void Build(BoardData boardData)
@@ -51,7 +51,7 @@ namespace OpenMyGame.Core.Board.View
                 for (int x = 0; x < boardData.Width; x++)
                 {
                     var coord = new BoardCoordinates(x, y);
-                    var cellData = boardData[coord];
+                    var cellData = boardData.GetCell(coord);
 
                     if (cellData.IsEmpty)
                         continue;
