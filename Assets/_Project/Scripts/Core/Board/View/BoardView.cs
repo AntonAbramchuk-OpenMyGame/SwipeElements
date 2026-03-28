@@ -14,17 +14,21 @@ namespace OpenMyGame.Core.Board.View
         private const float MoveDuration = 0.3f;
         private const float FallSpeed = 8.0f;
 
-        [Header("Refs")] [SerializeField] private Transform blocksRoot;
+        [Header("Refs")] [SerializeField] private Camera boardCamera;
+        [SerializeField] private Transform blocksRoot;
         [SerializeField] private List<BlockViewEntry> blockPrefabs;
 
         [Header("Layout")] [SerializeField] private float cellSize = 1.0f;
+        [SerializeField] private float boardWidthPadding = 2.0f;
+        [SerializeField] private float fixedCameraBottomY = -11.3f;
+        [SerializeField] private float minCameraSize = 10.0f;
         [SerializeField] private string boardSortingLayerName = "Board";
 
         private readonly Dictionary<int, BlockView> _blockViewsById = new(50);
         private readonly Dictionary<int, BlockView> _prefabsByType = new();
 
         private IBoardInput _boardInput;
-        private int _boardWidth;
+        private BoardSize _boardSize;
 
         public void Construct(IBoardInput boardInput)
         {
@@ -40,7 +44,7 @@ namespace OpenMyGame.Core.Board.View
         {
             Clear();
 
-            _boardWidth = boardData.Width;
+            _boardSize = boardData.Size;
 
             for (int y = 0; y < boardData.Height; y++)
             {
@@ -55,6 +59,8 @@ namespace OpenMyGame.Core.Board.View
                     CreateBlockView(cellData, coord);
                 }
             }
+
+            AdjustBoardAndCamera();
         }
 
         public void ApplyMoveStep(BoardDelta delta, Action<BoardDelta> onCompleted)
@@ -193,6 +199,30 @@ namespace OpenMyGame.Core.Board.View
             _blockViewsById.Add(cellData.BlockId, blockView);
         }
 
+        private void AdjustBoardAndCamera()
+        {
+            Vector3 blocksRootPos = blocksRoot.position;
+            blocksRootPos.x = -((_boardSize.Width - 1) * cellSize * 0.5f);
+            blocksRoot.position = blocksRootPos;
+
+            float boardWidth = _boardSize.Width * cellSize;
+            float boardHeight = _boardSize.Height * cellSize;
+
+            float boardBottomY = blocksRoot.position.y - cellSize * 0.5f;
+            float cameraBottomY = Mathf.Min(boardBottomY, fixedCameraBottomY);
+            float bottomMargin = boardBottomY - cameraBottomY;
+
+            float sizeForHeight = (boardHeight + bottomMargin * 2) * 0.5f;
+            float sizeForWidth = (boardWidth + boardWidthPadding * 2) / (2 * boardCamera.aspect);
+
+            float targetSize = Mathf.Max(minCameraSize, sizeForHeight, sizeForWidth);
+            boardCamera.orthographicSize = targetSize;
+
+            Vector3 cameraPos = boardCamera.transform.position;
+            cameraPos.y = cameraBottomY + targetSize;
+            boardCamera.transform.position = cameraPos;
+        }
+
         private void Clear()
         {
             foreach (var pair in _blockViewsById)
@@ -249,7 +279,7 @@ namespace OpenMyGame.Core.Board.View
 
         private int GetBlockSortingOrder(BoardCoordinates coord)
         {
-            return coord.Y * _boardWidth + coord.X;
+            return coord.Y * _boardSize.Width + coord.X;
         }
 
         [Serializable]

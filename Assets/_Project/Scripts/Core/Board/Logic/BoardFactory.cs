@@ -7,11 +7,6 @@ namespace OpenMyGame.Core.Board.Logic
 {
     public sealed class BoardFactory : IBoardFactory
     {
-        public BoardData CreateEmpty(BoardSize size)
-        {
-            return new BoardData(size);
-        }
-
         public BoardData CreateFromConfig(LevelConfigData levelConfigData)
         {
             if (levelConfigData == null)

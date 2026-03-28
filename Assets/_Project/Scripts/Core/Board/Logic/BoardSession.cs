@@ -22,11 +22,6 @@ namespace OpenMyGame.Core.Board.Logic
             _boardFactory = boardFactory ?? throw new ArgumentNullException(nameof(boardFactory));
         }
 
-        public void Initialize(BoardSize size)
-        {
-            BoardData = _boardFactory.CreateEmpty(size);
-        }
-
         public void Initialize(LevelConfigData levelConfigData)
         {
             BoardData = _boardFactory.CreateFromConfig(levelConfigData);

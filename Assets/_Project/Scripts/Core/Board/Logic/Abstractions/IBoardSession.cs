@@ -8,18 +8,10 @@ namespace OpenMyGame.Core.Board.Logic.Abstractions
         BoardData BoardData { get; }
         bool IsInitialized { get; }
 
-        void Initialize(BoardSize size);
         void Initialize(LevelConfigData levelConfigData);
 
-        BoardDelta SetCell(
-            BoardCoordinates coordinates,
-            CellData cellData
-        );
-
         BoardDelta ApplyMoveStep(BoardMove move);
-
         BoardDelta BuildFallStep();
-
         BoardDelta BuildDestroyStep();
     }
 }
