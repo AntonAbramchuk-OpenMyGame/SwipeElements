@@ -29,10 +29,17 @@ namespace OpenMyGame.Core.Board.View
 
         private IBoardInput _boardInput;
         private BoardSize _boardSize;
+        private BlockViewPool _blockViewPool;
 
         private void Awake()
         {
             CollectBlockPrefabsByType();
+            _blockViewPool = new BlockViewPool(_prefabsByType);
+        }
+
+        private void OnDestroy()
+        {
+            _blockViewPool?.Dispose();
         }
 
         public void Reinit(IBoardInput boardInput)
@@ -74,7 +81,7 @@ namespace OpenMyGame.Core.Board.View
 
                 int blockId = item.CurrentCell.BlockId;
 
-                if (!_blockViewsById.TryGetValue(blockId, out BlockView blockView))
+                if (!_blockViewsById.TryGetValue(blockId, out BlockView blockView) || !blockView)
                 {
                     Debug.LogError($"[BoardView] ApplyMoveStep: no BlockView for blockId={blockId}");
                     continue;
@@ -102,7 +109,7 @@ namespace OpenMyGame.Core.Board.View
 
                 int blockId = item.CurrentCell.BlockId;
 
-                if (!_blockViewsById.TryGetValue(blockId, out BlockView blockView))
+                if (!_blockViewsById.TryGetValue(blockId, out BlockView blockView) || !blockView)
                 {
                     Debug.LogError($"[BoardView] ApplyFallStep: no BlockView for blockId={blockId}");
                     continue;
@@ -141,7 +148,7 @@ namespace OpenMyGame.Core.Board.View
 
                 int blockId = item.PreviousCell.BlockId;
 
-                if (!_blockViewsById.TryGetValue(blockId, out BlockView blockView))
+                if (!_blockViewsById.TryGetValue(blockId, out BlockView blockView) || !blockView)
                 {
                     Debug.LogError($"[BoardView] ApplyDestroyStep: no BlockView for blockId={blockId}");
                     continue;
@@ -154,8 +161,9 @@ namespace OpenMyGame.Core.Board.View
 
                 void Release()
                 {
+                    UnsubscribeFromBlock(blockView);
                     _blockViewsById.Remove(blockId);
-                    blockView.Release();
+                    _blockViewPool.Release(blockView);
                 }
             }
 
@@ -184,13 +192,14 @@ namespace OpenMyGame.Core.Board.View
                 return;
             }
 
-            if (!_prefabsByType.TryGetValue(cellData.BlockTypeId, out BlockView prefab))
+            BlockView blockView = _blockViewPool.Get(cellData.BlockTypeId, blocksRoot);
+
+            if (!blockView)
             {
-                Debug.LogError($"No prefab for BlockTypeId={cellData.BlockTypeId}");
+                Debug.LogError($"Failed to get BlockView for BlockTypeId={cellData.BlockTypeId}");
                 return;
             }
 
-            BlockView blockView = Instantiate(prefab, blocksRoot);
             blockView.Initialize(cellData.BlockTypeId, cellData.BlockId);
             blockView.SetPosition(GetBlockWorldPosition(coord));
             blockView.SetSorting(boardSortingLayerName, GetBlockSortingOrder(coord));
@@ -230,7 +239,7 @@ namespace OpenMyGame.Core.Board.View
                 if (pair.Value)
                 {
                     UnsubscribeFromBlock(pair.Value);
-                    pair.Value.Release();
+                    _blockViewPool.Release(pair.Value);
                 }
             }
 
@@ -239,16 +248,22 @@ namespace OpenMyGame.Core.Board.View
 
         private void SubscribeToBlock(BlockView blockView)
         {
-            blockView.PointerDownEvent += OnBlockPointerDown;
-            blockView.DragEvent += OnBlockDrag;
-            blockView.PointerUpEvent += OnBlockPointerUp;
+            if (blockView)
+            {
+                blockView.PointerDownEvent += OnBlockPointerDown;
+                blockView.DragEvent += OnBlockDrag;
+                blockView.PointerUpEvent += OnBlockPointerUp;
+            }
         }
 
         private void UnsubscribeFromBlock(BlockView blockView)
         {
-            blockView.PointerDownEvent -= OnBlockPointerDown;
-            blockView.DragEvent -= OnBlockDrag;
-            blockView.PointerUpEvent -= OnBlockPointerUp;
+            if (blockView)
+            {
+                blockView.PointerDownEvent -= OnBlockPointerDown;
+                blockView.DragEvent -= OnBlockDrag;
+                blockView.PointerUpEvent -= OnBlockPointerUp;
+            }
         }
 
         private void OnBlockPointerDown(int blockId, PointerEventData eventData)

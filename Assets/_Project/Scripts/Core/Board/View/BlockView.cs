@@ -95,8 +95,6 @@ namespace OpenMyGame.Core.Board.View
         {
             StopIdle();
             KillTweens();
-
-            Destroy(gameObject);
         }
 
         private void PlayIdle(int startFrame = 0)
