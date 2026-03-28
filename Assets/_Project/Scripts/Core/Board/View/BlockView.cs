@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections;
 using DG.Tweening;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using Random = UnityEngine.Random;
 
 namespace OpenMyGame.Core.Board.View
 {
@@ -13,6 +15,14 @@ namespace OpenMyGame.Core.Board.View
 
         [SerializeField] private SpriteRenderer spriteRenderer;
 
+        [SerializeField] private Sprite[] idleFrames;
+        [SerializeField] private Sprite[] destroyFrames;
+
+        [SerializeField] private float idleFps = 30.0f;
+        [SerializeField] private float destroyFps = 30.0f;
+
+        private Coroutine _idleRoutine;
+
         public int BlockTypeId { get; private set; }
         public int BlockId { get; private set; }
 
@@ -21,29 +31,23 @@ namespace OpenMyGame.Core.Board.View
             BlockTypeId = blockTypeId;
             BlockId = blockId;
 
-            switch (blockTypeId)
-            {
-                case 0:
-                    spriteRenderer.color = Color.red;
-                    break;
-                case 1:
-                    spriteRenderer.color = Color.blue;
-                    break;
-            }
+            int startFrame = Random.Range(0, idleFrames.Length);
+            PlayIdle(startFrame);
 
 #if UNITY_EDITOR
             gameObject.name = $"Block ({BlockId})";
 #endif
         }
 
+        public void SetSorting(string sortingLayerName, int sortingOrder)
+        {
+            spriteRenderer.sortingLayerName = sortingLayerName;
+            spriteRenderer.sortingOrder = sortingOrder;
+        }
+
         public void SetPosition(Vector3 position)
         {
             transform.position = position;
-        }
-
-        public void PlayDestroy()
-        {
-            gameObject.SetActive(false);
         }
 
         public Tween PlayMove(Vector3 targetPosition, float duration)
@@ -64,19 +68,76 @@ namespace OpenMyGame.Core.Board.View
                 .SetTarget(this);
         }
 
+        public Tween PlayDestroy()
+        {
+            StopIdle();
+
+            float duration = destroyFrames.Length / destroyFps;
+            int frame = 0;
+
+            return DOTween.To(
+                    () => frame,
+                    x =>
+                    {
+                        frame = x;
+
+                        int clamped = Mathf.Clamp(frame, 0, destroyFrames.Length - 1);
+                        spriteRenderer.sprite = destroyFrames[clamped];
+                    },
+                    destroyFrames.Length - 1,
+                    duration
+                )
+                .SetEase(Ease.Linear)
+                .SetTarget(this);
+        }
+
         public void Release()
         {
+            StopIdle();
             KillTweens();
+
             Destroy(gameObject);
         }
 
-        public void KillTweens()
+        private void PlayIdle(int startFrame = 0)
+        {
+            StopIdle();
+            _idleRoutine = StartCoroutine(IdleRoutine(startFrame));
+        }
+
+        private IEnumerator IdleRoutine(int startFrame)
+        {
+            float delay = 1.0f / idleFps;
+            WaitForSeconds waitForSeconds = new WaitForSeconds(delay);
+
+            int index = startFrame;
+
+            while (gameObject.activeSelf)
+            {
+                spriteRenderer.sprite = idleFrames[index];
+
+                index = (index + 1) % idleFrames.Length;
+                yield return waitForSeconds;
+            }
+        }
+
+        private void StopIdle()
+        {
+            if (_idleRoutine != null)
+            {
+                StopCoroutine(_idleRoutine);
+                _idleRoutine = null;
+            }
+        }
+
+        private void KillTweens()
         {
             DOTween.Kill(this);
         }
 
         private void OnDisable()
         {
+            StopIdle();
             KillTweens();
         }
 

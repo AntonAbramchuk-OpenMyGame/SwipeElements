@@ -15,23 +15,32 @@ namespace OpenMyGame.Core.Board.View
         private const float FallSpeed = 8.0f;
 
         [Header("Refs")] [SerializeField] private Transform blocksRoot;
-        [SerializeField] private BlockView blockViewPrefab;
+        [SerializeField] private List<BlockViewEntry> blockPrefabs;
 
-        [Header("Layout")] [SerializeField] private Vector2 boardOrigin = Vector2.zero;
-        [SerializeField] private float cellSize = 1.0f;
+        [Header("Layout")] [SerializeField] private float cellSize = 1.0f;
+        [SerializeField] private string boardSortingLayerName = "Board";
 
-        private readonly Dictionary<int, BlockView> _blockViewsById = new();
+        private readonly Dictionary<int, BlockView> _blockViewsById = new(50);
+        private readonly Dictionary<int, BlockView> _prefabsByType = new();
 
         private IBoardInput _boardInput;
+        private int _boardWidth;
 
         public void Construct(IBoardInput boardInput)
         {
             _boardInput = boardInput;
         }
 
+        private void Awake()
+        {
+            CollectBlockPrefabsByType();
+        }
+
         public void Build(BoardData boardData)
         {
             Clear();
+
+            _boardWidth = boardData.Width;
 
             for (int y = 0; y < boardData.Height; y++)
             {
@@ -52,10 +61,8 @@ namespace OpenMyGame.Core.Board.View
         {
             TweenBatchCompletion completion = new(delta, onCompleted);
 
-            for (int i = 0; i < delta.Items.Count; i++)
+            foreach (var item in delta.Items)
             {
-                BoardDeltaItem item = delta.Items[i];
-
                 if (!item.IsMove)
                     continue;
 
@@ -67,23 +74,23 @@ namespace OpenMyGame.Core.Board.View
                     continue;
                 }
 
+                blockView.SetSorting(boardSortingLayerName, GetBlockSortingOrder(item.To));
+
                 Vector3 targetPosition = GetBlockWorldPosition(item.To);
                 Tween tween = blockView.PlayMove(targetPosition, MoveDuration);
 
                 completion.RegisterTween(tween);
             }
 
-            completion.CompleteImmediatelyIfEmpty();
+            completion.CompleteIfEmpty();
         }
 
         public void ApplyFallStep(BoardDelta delta, Action<BoardDelta> onCompleted)
         {
             TweenBatchCompletion completion = new(delta, onCompleted);
 
-            for (int i = 0; i < delta.Items.Count; i++)
+            foreach (var item in delta.Items)
             {
-                BoardDeltaItem item = delta.Items[i];
-
                 if (!item.IsMove)
                     continue;
 
@@ -94,6 +101,8 @@ namespace OpenMyGame.Core.Board.View
                     Debug.LogError($"[BoardView] ApplyFallStep: no BlockView for blockId={blockId}");
                     continue;
                 }
+
+                blockView.SetSorting(boardSortingLayerName, GetBlockSortingOrder(item.To));
 
                 Vector3 targetPosition = GetBlockWorldPosition(item.To);
                 Vector3 currentPosition = blockView.transform.position;
@@ -112,27 +121,53 @@ namespace OpenMyGame.Core.Board.View
                 completion.RegisterTween(tween);
             }
 
-            completion.CompleteImmediatelyIfEmpty();
+            completion.CompleteIfEmpty();
         }
 
         public void ApplyDestroyStep(BoardDelta delta, Action<BoardDelta> onCompleted)
         {
-            foreach (BoardDeltaItem item in delta.Items)
+            TweenBatchCompletion completion = new(delta, onCompleted);
+
+            foreach (var item in delta.Items)
             {
+                if (!item.IsDestroy)
+                    continue;
+
                 int blockId = item.PreviousCell.BlockId;
 
-                // ReSharper disable once CanSimplifyDictionaryRemovingWithSingleCall;
                 if (!_blockViewsById.TryGetValue(blockId, out BlockView blockView))
                 {
                     Debug.LogError($"[BoardView] ApplyDestroyStep: no BlockView for blockId={blockId}");
                     continue;
                 }
 
-                _blockViewsById.Remove(blockId);
-                blockView.PlayDestroy();
+                Tween tween = blockView.PlayDestroy();
+
+                completion.RegisterTween(tween, Release);
+                continue;
+
+                void Release()
+                {
+                    _blockViewsById.Remove(blockId);
+                    blockView.Release();
+                }
             }
 
-            onCompleted?.Invoke(delta);
+            completion.CompleteIfEmpty();
+        }
+
+        private void CollectBlockPrefabsByType()
+        {
+            foreach (var entry in blockPrefabs)
+            {
+                if (_prefabsByType.ContainsKey(entry.BlockTypeId))
+                {
+                    Debug.LogError($"Duplicate prefab for type {entry.BlockTypeId}");
+                    continue;
+                }
+
+                _prefabsByType.Add(entry.BlockTypeId, entry.Prefab);
+            }
         }
 
         private void CreateBlockView(CellData cellData, BoardCoordinates coord)
@@ -143,9 +178,16 @@ namespace OpenMyGame.Core.Board.View
                 return;
             }
 
-            BlockView blockView = Instantiate(blockViewPrefab, blocksRoot);
+            if (!_prefabsByType.TryGetValue(cellData.BlockTypeId, out BlockView prefab))
+            {
+                Debug.LogError($"No prefab for BlockTypeId={cellData.BlockTypeId}");
+                return;
+            }
+
+            BlockView blockView = Instantiate(prefab, blocksRoot);
             blockView.Initialize(cellData.BlockTypeId, cellData.BlockId);
             blockView.SetPosition(GetBlockWorldPosition(coord));
+            blockView.SetSorting(boardSortingLayerName, GetBlockSortingOrder(coord));
 
             SubscribeToBlock(blockView);
             _blockViewsById.Add(cellData.BlockId, blockView);
@@ -196,11 +238,28 @@ namespace OpenMyGame.Core.Board.View
 
         private Vector3 GetBlockWorldPosition(BoardCoordinates coord)
         {
+            Vector3 blocksRootPosition = blocksRoot.position;
+
             return new Vector3(
-                boardOrigin.x + coord.X * cellSize,
-                boardOrigin.y + coord.Y * cellSize,
+                blocksRootPosition.x + coord.X * cellSize,
+                blocksRootPosition.y + coord.Y * cellSize,
                 0.0f
             );
+        }
+
+        private int GetBlockSortingOrder(BoardCoordinates coord)
+        {
+            return coord.Y * _boardWidth + coord.X;
+        }
+
+        [Serializable]
+        public class BlockViewEntry
+        {
+            [SerializeField] private int blockTypeId;
+            [SerializeField] private BlockView prefab;
+
+            public int BlockTypeId => blockTypeId;
+            public BlockView Prefab => prefab;
         }
 
         private sealed class TweenBatchCompletion
@@ -217,40 +276,36 @@ namespace OpenMyGame.Core.Board.View
                 _onCompleted = onCompleted;
             }
 
-            public void RegisterTween(Tween tween)
+            public void RegisterTween(Tween tween, Action onCompleteOrKill = null)
             {
                 _remaining++;
 
-                bool finished = false;
+                bool completedOrKilled = false;
 
-                void MarkFinished()
+                void OnCompleteOrKill()
                 {
-                    if (finished)
+                    if (completedOrKilled)
                         return;
 
-                    finished = true;
+                    completedOrKilled = true;
                     _remaining--;
 
-                    if (_completed)
-                        return;
+                    onCompleteOrKill?.Invoke();
 
-                    if (_remaining > 0)
+                    if (_remaining > 0 || _completed)
                         return;
 
                     _completed = true;
                     _onCompleted?.Invoke(_delta);
                 }
 
-                tween.OnComplete(MarkFinished);
-                tween.OnKill(MarkFinished);
+                tween.OnComplete(OnCompleteOrKill);
+                tween.OnKill(OnCompleteOrKill);
             }
 
-            public void CompleteImmediatelyIfEmpty()
+            public void CompleteIfEmpty()
             {
-                if (_completed)
-                    return;
-
-                if (_remaining > 0)
+                if (_remaining > 0 || _completed)
                     return;
 
                 _completed = true;
