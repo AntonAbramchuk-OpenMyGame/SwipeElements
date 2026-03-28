@@ -135,7 +135,7 @@ MonoBehaviour:
   - {fileID: -3285110475965581308, guid: 61bf3782c1185044ea710af09855a905, type: 3}
   - {fileID: -116280357101962475, guid: 5988f85ace8f92e43a6a105d29a0de5e, type: 3}
   idleFps: 11
-  destroyFps: 34
+  destroyFps: 26
 --- !u!1 &8023410241184558310
 GameObject:
   m_ObjectHideFlags: 0

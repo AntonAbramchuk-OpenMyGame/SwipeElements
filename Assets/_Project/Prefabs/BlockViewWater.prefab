@@ -22,7 +22,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3417571155924465371, guid: 1f8c895089eb387418cebaafb9b083cf, type: 3}
       propertyPath: destroyFps
-      value: 38
+      value: 29
       objectReference: {fileID: 0}
     - target: {fileID: 3417571155924465371, guid: 1f8c895089eb387418cebaafb9b083cf, type: 3}
       propertyPath: idleFrames.Array.size
