@@ -26,20 +26,20 @@ namespace OpenMyGame.Core.Board.Logic
 
             BoardSize size = new(levelConfigData.Width, levelConfigData.Height);
 
-            if (levelConfigData.Cells.Length != size.CellCount)
+            if (levelConfigData.Cells.Count != size.CellCount)
             {
                 throw new ArgumentException(
-                    $"Cells length ({levelConfigData.Cells.Length}) does not match board size ({size.CellCount}).",
+                    $"Cells length ({levelConfigData.Cells.Count}) does not match board size ({size.CellCount}).",
                     nameof(levelConfigData));
             }
 
-            CellData[] cells = new CellData[levelConfigData.Cells.Length];
+            CellData[] cells = new CellData[levelConfigData.Cells.Count];
             int nextBlockId = 0;
 
             // LevelConfigData.Cells are defined top-to-bottom, like a visual picture.
             // BoardData uses bottom-to-top coordinates where y = 0 is the bottom row.
             // So we invert Y while copying config data into runtime board data.
-            for (int i = 0; i < levelConfigData.Cells.Length; i++)
+            for (int i = 0; i < levelConfigData.Cells.Count; i++)
             {
                 int x = i % size.Width;
                 int yFromTop = i / size.Width;

@@ -15,7 +15,8 @@ namespace OpenMyGame.Core.Board.Logic
 
         public BoardDelta ApplyMoveStep(
             BoardData boardData,
-            BoardMove move)
+            BoardMove move
+        )
         {
             if (boardData == null)
                 throw new ArgumentNullException(nameof(boardData));
