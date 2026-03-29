@@ -77,14 +77,6 @@ namespace OpenMyGame.Core.Board.Logic
             if (originCell.IsEmpty)
                 return false;
 
-            if (move.Direction == BoardMoveDirection.Up)
-            {
-                CellData targetCell = boardData.GetCell(target);
-
-                if (targetCell.IsEmpty)
-                    return false;
-            }
-
             return true;
         }
     }

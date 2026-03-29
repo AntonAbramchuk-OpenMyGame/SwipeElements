@@ -51,9 +51,39 @@ namespace OpenMyGame.Core.Board.Logic
             if (_isLevelCompleted)
                 return;
 
+            if (!IsMoveValid(move))
+                return;
+
             _pendingMoves.Enqueue(move);
 
             TryProcessPipeline();
+        }
+
+        private bool IsMoveValid(BoardMove move)
+        {
+            if (!BoardData.IsInside(move.Origin))
+                return false;
+
+            BoardCoordinates target = move.GetTargetCoordinates();
+
+            if (!BoardData.IsInside(target))
+                return false;
+
+            if (move.Direction == BoardMoveDirection.Up)
+            {
+                CellData targetCell = BoardData.GetCell(target);
+
+                if (targetCell.IsEmpty)
+                    return false;
+            }
+
+            if (IsReserved(move.Origin))
+                return false;
+
+            if (IsReserved(target))
+                return false;
+
+            return true;
         }
 
         private void TryProcessPipeline()
@@ -64,9 +94,6 @@ namespace OpenMyGame.Core.Board.Logic
             UnityEngine.Debug.Log(
                 $"[Controller] TryAdvanceLogic | pending={_pendingMoves.Count}, move={_activeMoveCount}, fall={_activeFallCount}, destroy={_activeDestroyCount}"
             );
-
-            if (_activeDestroyCount > 0)
-                return;
 
             ProcessPendingMoves();
 
@@ -102,15 +129,9 @@ namespace OpenMyGame.Core.Board.Logic
             while (_pendingMoves.Count > 0)
             {
                 BoardMove move = _pendingMoves.Peek();
-
-                if (!CanStartMove(move))
-                {
-                    _pendingMoves.Dequeue();
-                    continue;
-                }
+                _pendingMoves.Dequeue();
 
                 BoardDelta moveDelta = _boardSession.ApplyMoveStep(move);
-                _pendingMoves.Dequeue();
 
                 if (!moveDelta.HasItems)
                     continue;
@@ -124,31 +145,12 @@ namespace OpenMyGame.Core.Board.Logic
             }
         }
 
-        private bool CanStartMove(BoardMove move)
-        {
-            if (!BoardData.IsInside(move.Origin))
-                return false;
-
-            BoardCoordinates target = move.GetTargetCoordinates();
-
-            if (!BoardData.IsInside(target))
-                return false;
-
-            if (IsReserved(move.Origin))
-                return false;
-
-            if (IsReserved(target))
-                return false;
-
-            return true;
-        }
-
         private void TryStartFall()
         {
             BoardDelta fallDelta = _boardSession.BuildFallStep();
 
             UnityEngine.Debug.Log("New FallDelta builded");
-            BoardDebugPrinter.Print(_boardSession.BoardData);
+            BoardDebugPrinter.Print(BoardData);
 
             if (!fallDelta.HasItems)
             {
@@ -164,7 +166,7 @@ namespace OpenMyGame.Core.Board.Logic
 
         private void TryStartDestroy()
         {
-            BoardDebugPrinter.Print(_boardSession.BoardData);
+            BoardDebugPrinter.Print(BoardData);
 
             BoardDelta destroyDelta = _boardSession.BuildDestroyStep();
 
@@ -172,7 +174,7 @@ namespace OpenMyGame.Core.Board.Logic
             UnityEngine.Debug.Log(
                 $"[Controller] DestroyDelta has items = {destroyDelta.HasItems}, count = {destroyDelta.Items.Count}"
             );
-            BoardDebugPrinter.Print(_boardSession.BoardData);
+            BoardDebugPrinter.Print(BoardData);
 
             if (!destroyDelta.HasItems)
                 return;
