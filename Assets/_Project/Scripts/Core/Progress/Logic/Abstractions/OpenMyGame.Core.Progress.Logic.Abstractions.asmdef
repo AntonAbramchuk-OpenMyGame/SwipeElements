@@ -1,9 +1,8 @@
 {
-    "name": "OpenMyGame.Core.Board.Logic.Abstractions",
-    "rootNamespace": "OpenMyGame.Core.Board.Logic.Abstractions",
+    "name": "OpenMyGame.Core.Progress.Logic.Abstractions",
+    "rootNamespace": "OpenMyGame.Core.Progress.Logic.Abstractions",
     "references": [
-        "OpenMyGame.Core.Level.Data",
-        "OpenMyGame.Core.Board.Data",
+        "UniTask",
         "OpenMyGame.Core.Progress.Data"
     ],
     "includePlatforms": [],

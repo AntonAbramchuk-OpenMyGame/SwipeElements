@@ -6,8 +6,15 @@ namespace OpenMyGame.Core.Level.Logic.Abstractions
 {
     public interface ILevelProvider
     {
+        int LevelsCount { get; }
+        bool HasLevel(string levelId);
         UniTask InitializeAsync(CancellationToken cancellationToken);
-        UniTask<LevelConfigData> LoadCurrentLevelAsync(CancellationToken cancellationToken);
-        UniTask<LevelConfigData> LoadNextLevelAsync(CancellationToken cancellationToken);
+        string GetLevelIdByCompletedLevelsCount(int completedLevelsCount);
+        UniTask<LevelConfigData> LoadLevelByIdAsync(string levelId, CancellationToken cancellationToken);
+
+        UniTask<LevelConfigData> LoadLevelByCompletedLevelsCountAsync(
+            int completedLevelsCount,
+            CancellationToken cancellationToken
+        );
     }
 }

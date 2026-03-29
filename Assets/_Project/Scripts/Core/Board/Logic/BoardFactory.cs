@@ -2,6 +2,7 @@
 using OpenMyGame.Core.Board.Data;
 using OpenMyGame.Core.Board.Logic.Abstractions;
 using OpenMyGame.Core.Level.Data;
+using OpenMyGame.Core.Progress.Data;
 
 namespace OpenMyGame.Core.Board.Logic
 {
@@ -56,6 +57,55 @@ namespace OpenMyGame.Core.Board.Logic
                 {
                     cells[runtimeIndex] = CellData.CreateFilled(blockTypeId, nextBlockId);
                     nextBlockId++;
+                }
+            }
+
+            return new BoardData(size, cells);
+        }
+
+        public BoardData CreateFromSave(BoardSaveData boardSaveData)
+        {
+            if (boardSaveData == null)
+                throw new ArgumentNullException(nameof(boardSaveData));
+
+            if (boardSaveData.width <= 0)
+                throw new ArgumentOutOfRangeException(nameof(boardSaveData.width));
+
+            if (boardSaveData.height <= 0)
+                throw new ArgumentOutOfRangeException(nameof(boardSaveData.height));
+
+            if (boardSaveData.cells == null)
+                throw new ArgumentNullException(nameof(boardSaveData.cells));
+
+            BoardSize size = new(boardSaveData.width, boardSaveData.height);
+
+            if (boardSaveData.cells.Length != size.CellCount)
+            {
+                throw new ArgumentException(
+                    $"Cells length ({boardSaveData.cells.Length}) does not match board size ({size.CellCount}).",
+                    nameof(boardSaveData));
+            }
+
+            CellData[] cells = new CellData[size.CellCount];
+
+            // ВАЖНО:
+            // SaveData уже хранится в runtime-порядке (bottom → top),
+            // т.е. в том же виде, как BoardData.
+            // Поэтому НИКАКОЙ инверсии Y делать не нужно.
+
+            for (int i = 0; i < boardSaveData.cells.Length; i++)
+            {
+                CellSaveData saveCell = boardSaveData.cells[i];
+
+                if (saveCell.isEmpty)
+                {
+                    cells[i] = CellData.Empty;
+                }
+                else
+                {
+                    cells[i] = CellData.CreateFilled(
+                        saveCell.blockTypeId,
+                        saveCell.blockId);
                 }
             }
 

@@ -18,7 +18,8 @@ namespace OpenMyGame.Core.Level.Logic
         private readonly List<string> _levelIds = new();
 
         private bool _isInitialized;
-        private int _currentLevelIndex;
+
+        public int LevelsCount => _levelIds.Count;
 
         public async UniTask InitializeAsync(CancellationToken cancellationToken)
         {
@@ -39,33 +40,41 @@ namespace OpenMyGame.Core.Level.Logic
             _levelIds.Clear();
             _levelIds.AddRange(catalogDto.LevelIds);
 
-            _currentLevelIndex = 0;
             _isInitialized = true;
         }
 
-        public async UniTask<LevelConfigData> LoadCurrentLevelAsync(CancellationToken cancellationToken)
+        public bool HasLevel(string levelId)
+        {
+            EnsureInitialized();
+            return !string.IsNullOrWhiteSpace(levelId) && _levelIds.Contains(levelId);
+        }
+
+        public string GetLevelIdByCompletedLevelsCount(int completedLevelsCount)
         {
             EnsureInitialized();
 
-            string levelId = _levelIds[_currentLevelIndex];
-            return await LoadLevelByIdAsync(levelId, cancellationToken);
+            if (completedLevelsCount < 0)
+                throw new ArgumentOutOfRangeException(nameof(completedLevelsCount));
+
+            int index = completedLevelsCount % _levelIds.Count;
+            return _levelIds[index];
         }
 
-        public async UniTask<LevelConfigData> LoadNextLevelAsync(CancellationToken cancellationToken)
+        public UniTask<LevelConfigData> LoadLevelByCompletedLevelsCountAsync(
+            int completedLevelsCount,
+            CancellationToken cancellationToken)
+        {
+            string levelId = GetLevelIdByCompletedLevelsCount(completedLevelsCount);
+            return LoadLevelByIdAsync(levelId, cancellationToken);
+        }
+
+        public async UniTask<LevelConfigData> LoadLevelByIdAsync(string levelId, CancellationToken cancellationToken)
         {
             EnsureInitialized();
 
-            _currentLevelIndex = (_currentLevelIndex + 1) % _levelIds.Count;
+            if (!HasLevel(levelId))
+                throw new Exception($"[LevelProvider] Level does not exist in catalog: {levelId}");
 
-            string levelId = _levelIds[_currentLevelIndex];
-            return await LoadLevelByIdAsync(levelId, cancellationToken);
-        }
-
-        private static async UniTask<LevelConfigData> LoadLevelByIdAsync(
-            string levelId,
-            CancellationToken cancellationToken
-        )
-        {
             string fileName = $"{levelId}.json";
             string relativePath = Path.Combine(LevelsFolderName, fileName);
 
@@ -84,8 +93,7 @@ namespace OpenMyGame.Core.Level.Logic
 
         private static async UniTask<string> LoadStreamingAssetTextAsync(
             string relativePath,
-            CancellationToken cancellationToken
-        )
+            CancellationToken cancellationToken)
         {
             string fullPath = Path.Combine(Application.streamingAssetsPath, relativePath);
 
@@ -93,9 +101,7 @@ namespace OpenMyGame.Core.Level.Logic
             await request.SendWebRequest().WithCancellation(cancellationToken);
 
             if (request.result != UnityWebRequest.Result.Success)
-                throw new Exception(
-                    $"[LevelProvider] Failed to load file: {relativePath}. Error: {request.error}"
-                );
+                throw new Exception($"[LevelProvider] Failed to load file: {relativePath}. Error: {request.error}");
 
             return request.downloadHandler.text;
         }

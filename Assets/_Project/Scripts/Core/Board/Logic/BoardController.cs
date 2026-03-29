@@ -9,6 +9,9 @@ namespace OpenMyGame.Core.Board.Logic
 {
     public sealed class BoardController : IBoardController
     {
+        public event Action Settled;
+        public event Action LevelCompleted;
+
         private readonly IBoardSession _boardSession;
         private readonly ILevelWinCondition _levelWinCondition;
         private readonly IBoardStepView _boardStepView;
@@ -38,6 +41,9 @@ namespace OpenMyGame.Core.Board.Logic
         public void Dispose()
         {
             _isDisposed = true;
+
+            Settled = null;
+            LevelCompleted = null;
 
             _pendingMoves.Clear();
             _reservedCellCounters.Clear();
@@ -121,7 +127,16 @@ namespace OpenMyGame.Core.Board.Logic
                     return;
             }
 
-            TryHandleLevelCompleted();
+            if (TryHandleLevelCompleted())
+                return;
+
+            if (_pendingMoves.Count == 0 &&
+                _activeMoveCount == 0 &&
+                _activeFallCount == 0 &&
+                _activeDestroyCount == 0)
+            {
+                Settled?.Invoke();
+            }
         }
 
         private void ProcessPendingMoves()
@@ -185,7 +200,7 @@ namespace OpenMyGame.Core.Board.Logic
             PlayDelta(destroyDelta, OnDestroyCompleted);
         }
 
-        private void TryHandleLevelCompleted()
+        private bool TryHandleLevelCompleted()
         {
             if (_isLevelCompleted ||
                 _pendingMoves.Count > 0 ||
@@ -193,14 +208,17 @@ namespace OpenMyGame.Core.Board.Logic
                 _activeFallCount > 0 ||
                 _activeDestroyCount > 0)
             {
-                return;
+                return false;
             }
 
             if (!_levelWinCondition.IsCompleted(BoardData))
-                return;
+                return false;
 
             _isLevelCompleted = true;
             UnityEngine.Debug.Log("[Controller] LEVEL COMPLETED");
+            LevelCompleted?.Invoke();
+
+            return true;
         }
 
         private void OnMoveCompleted(BoardDelta delta)

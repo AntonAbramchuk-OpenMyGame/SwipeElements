@@ -12,7 +12,11 @@
         "OpenMyGame.Core.Board.Utils",
         "OpenMyGame.Core.Level.Data",
         "OpenMyGame.Core.Level.Logic",
-        "OpenMyGame.Core.Level.Logic.Abstractions"
+        "OpenMyGame.Core.Level.Logic.Abstractions",
+        "OpenMyGame.Core.Progress.Data",
+        "OpenMyGame.Core.Progress.Logic",
+        "OpenMyGame.Core.Progress.Logic.Abstractions",
+        "OpenMyGame.Core.UI"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
