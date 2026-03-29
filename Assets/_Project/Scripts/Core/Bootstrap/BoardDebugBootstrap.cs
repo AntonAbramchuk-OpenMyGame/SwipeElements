@@ -1,5 +1,4 @@
-﻿using OpenMyGame.Core.Board.Data;
-using OpenMyGame.Core.Board.Logic;
+﻿using OpenMyGame.Core.Board.Logic;
 using OpenMyGame.Core.Board.Logic.Abstractions;
 using OpenMyGame.Core.Board.Utils;
 using OpenMyGame.Core.Board.View;
@@ -27,6 +26,7 @@ namespace OpenMyGame.Core.Bootstrap
         };
 
         [SerializeField] private BoardView boardView;
+        [Range(0.1f, 3.0f)] [SerializeField] private float timeScale = 1.0f;
 
         private IBoardFactory _boardFactory;
         private IBoardNormalizer _boardNormalizer;
@@ -36,6 +36,11 @@ namespace OpenMyGame.Core.Bootstrap
         private IBoardSession _boardSession;
         private IBoardController _boardController;
         private IBoardInput _boardInput;
+
+        private void OnValidate()
+        {
+            Time.timeScale = timeScale;
+        }
 
         private void Awake()
         {
@@ -48,6 +53,7 @@ namespace OpenMyGame.Core.Bootstrap
         private void OnEnable()
         {
             _boardSession = new BoardSession(_boardService, _boardFactory);
+            _boardController?.Dispose();
             _boardController = new BoardController(_boardSession, _levelWinCondition, boardView);
             _boardInput = new BoardInput(_boardController, _boardSession);
 
@@ -58,29 +64,6 @@ namespace OpenMyGame.Core.Bootstrap
 
             Debug.Log("=== AFTER INIT ===");
             BoardDebugPrinter.Print(_boardSession.BoardData);
-        }
-
-        private void Update()
-        {
-            if (Input.GetKeyDown(KeyCode.Alpha1))
-            {
-                _boardController.EnqueueMove(
-                    new BoardMove(new BoardCoordinates(1, 4), BoardMoveDirection.Down)
-                );
-
-                Debug.Log("=== AFTER CONTROLLER LOGIC ===");
-                BoardDebugPrinter.Print(_boardSession.BoardData);
-            }
-
-            else if (Input.GetKeyDown(KeyCode.Alpha2))
-            {
-                _boardController.EnqueueMove(
-                    new BoardMove(new BoardCoordinates(0, 2), BoardMoveDirection.Right)
-                );
-
-                Debug.Log("=== AFTER CONTROLLER LOGIC ===");
-                BoardDebugPrinter.Print(_boardSession.BoardData);
-            }
         }
     }
 }

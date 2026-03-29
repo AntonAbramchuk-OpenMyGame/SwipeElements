@@ -133,12 +133,6 @@ namespace OpenMyGame.Core.Board.View
             DOTween.Kill(this);
         }
 
-        private void OnDisable()
-        {
-            StopIdle();
-            KillTweens();
-        }
-
         void IPointerDownHandler.OnPointerDown(PointerEventData eventData)
         {
             PointerDownEvent?.Invoke(BlockId, eventData);

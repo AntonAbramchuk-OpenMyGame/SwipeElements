@@ -519,6 +519,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::OpenMyGame.Core.Board.Utils.BoardDebugBootstrap
   boardView: {fileID: 48868025}
+  timeScale: 1
 --- !u!4 &1828016005
 Transform:
   m_ObjectHideFlags: 0

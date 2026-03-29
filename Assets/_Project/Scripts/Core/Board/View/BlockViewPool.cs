@@ -53,7 +53,7 @@ namespace OpenMyGame.Core.Board.View
 
             int blockTypeId = blockView.BlockTypeId;
 
-            if (!_poolByType.TryGetValue(blockTypeId, out Stack<BlockView> pool))
+            if (!_poolByType.TryGetValue(blockTypeId, out Stack<BlockView> pool) || pool == null)
             {
                 Debug.LogError($"[BlockViewPool] No pool for BlockTypeId={blockTypeId}");
 
@@ -64,6 +64,9 @@ namespace OpenMyGame.Core.Board.View
             blockView.Release();
             blockView.transform.SetParent(null, false);
             blockView.gameObject.SetActive(false);
+
+            if (pool.Contains(blockView))
+                Debug.LogError($"[BlockViewPool] BlockId={blockView.BlockId} already in pool");
 
             pool.Push(blockView);
         }

@@ -30,6 +30,7 @@ namespace OpenMyGame.Core.Board.View
         private IBoardInput _boardInput;
         private BoardSize _boardSize;
         private BlockViewPool _blockViewPool;
+        private int _viewVersion;
 
         private void Awake()
         {
@@ -49,6 +50,7 @@ namespace OpenMyGame.Core.Board.View
 
         public void Build(BoardData boardData)
         {
+            _viewVersion++;
             Clear();
 
             _boardSize = boardData.Size;
@@ -70,9 +72,10 @@ namespace OpenMyGame.Core.Board.View
             AdjustBoardAndCamera();
         }
 
-        public void ApplyMoveStep(BoardDelta delta, Action<BoardDelta> onCompleted)
+        public void ApplyMoveStep(BoardDelta delta, Action<BoardDelta> onComplete)
         {
-            TweenBatchCompletion completion = new(delta, onCompleted);
+            int capturedViewVersion = _viewVersion;
+            TweenBatchCompletion completion = new(() => _viewVersion == capturedViewVersion, delta, onComplete);
 
             foreach (var item in delta.Items)
             {
@@ -98,9 +101,10 @@ namespace OpenMyGame.Core.Board.View
             completion.CompleteIfEmpty();
         }
 
-        public void ApplyFallStep(BoardDelta delta, Action<BoardDelta> onCompleted)
+        public void ApplyFallStep(BoardDelta delta, Action<BoardDelta> onComplete)
         {
-            TweenBatchCompletion completion = new(delta, onCompleted);
+            int capturedViewVersion = _viewVersion;
+            TweenBatchCompletion completion = new(() => _viewVersion == capturedViewVersion, delta, onComplete);
 
             foreach (var item in delta.Items)
             {
@@ -137,9 +141,10 @@ namespace OpenMyGame.Core.Board.View
             completion.CompleteIfEmpty();
         }
 
-        public void ApplyDestroyStep(BoardDelta delta, Action<BoardDelta> onCompleted)
+        public void ApplyDestroyStep(BoardDelta delta, Action<BoardDelta> onComplete)
         {
-            TweenBatchCompletion completion = new(delta, onCompleted);
+            int capturedViewVersion = _viewVersion;
+            TweenBatchCompletion completion = new(() => _viewVersion == capturedViewVersion, delta, onComplete);
 
             foreach (var item in delta.Items)
             {
@@ -234,16 +239,17 @@ namespace OpenMyGame.Core.Board.View
 
         private void Clear()
         {
-            foreach (var pair in _blockViewsById)
-            {
-                if (pair.Value)
-                {
-                    UnsubscribeFromBlock(pair.Value);
-                    _blockViewPool.Release(pair.Value);
-                }
-            }
-
+            List<BlockView> blockViews = new(_blockViewsById.Values);
             _blockViewsById.Clear();
+
+            foreach (BlockView blockView in blockViews)
+            {
+                if (!blockView)
+                    continue;
+
+                UnsubscribeFromBlock(blockView);
+                _blockViewPool.Release(blockView);
+            }
         }
 
         private void SubscribeToBlock(BlockView blockView)
@@ -309,16 +315,22 @@ namespace OpenMyGame.Core.Board.View
 
         private sealed class TweenBatchCompletion
         {
-            private readonly BoardDelta _delta;
-            private readonly Action<BoardDelta> _onCompleted;
+            private readonly Func<bool> _isValidFunc;
+            private readonly BoardDelta _boardDelta;
+            private readonly Action<BoardDelta> _onComplete;
 
             private int _remaining;
             private bool _completed;
 
-            public TweenBatchCompletion(BoardDelta delta, Action<BoardDelta> onCompleted)
+            public TweenBatchCompletion(
+                Func<bool> isValidFunc,
+                BoardDelta boardDelta,
+                Action<BoardDelta> onComplete
+            )
             {
-                _delta = delta;
-                _onCompleted = onCompleted;
+                _isValidFunc = isValidFunc;
+                _boardDelta = boardDelta;
+                _onComplete = onComplete;
             }
 
             public void RegisterTween(Tween tween, Action onCompleteOrKill = null)
@@ -335,13 +347,11 @@ namespace OpenMyGame.Core.Board.View
                     completedOrKilled = true;
                     _remaining--;
 
-                    onCompleteOrKill?.Invoke();
-
-                    if (_remaining > 0 || _completed)
+                    if (!IsValid())
                         return;
 
-                    _completed = true;
-                    _onCompleted?.Invoke(_delta);
+                    onCompleteOrKill?.Invoke();
+                    CompleteIfEmpty();
                 }
 
                 tween.OnComplete(OnCompleteOrKill);
@@ -350,11 +360,19 @@ namespace OpenMyGame.Core.Board.View
 
             public void CompleteIfEmpty()
             {
+                if (!IsValid())
+                    return;
+
                 if (_remaining > 0 || _completed)
                     return;
 
                 _completed = true;
-                _onCompleted?.Invoke(_delta);
+                _onComplete?.Invoke(_boardDelta);
+            }
+
+            private bool IsValid()
+            {
+                return _isValidFunc?.Invoke() ?? false;
             }
         }
     }

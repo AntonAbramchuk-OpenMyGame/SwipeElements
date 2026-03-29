@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using OpenMyGame.Core.Board.Data;
 using OpenMyGame.Core.Board.Logic.Abstractions;
 using OpenMyGame.Core.Board.Utils;
@@ -19,6 +20,7 @@ namespace OpenMyGame.Core.Board.Logic
         private int _activeFallCount;
         private int _activeDestroyCount;
         private bool _isLevelCompleted;
+        private bool _isDisposed;
 
         public BoardData BoardData => _boardSession.BoardData;
 
@@ -33,18 +35,32 @@ namespace OpenMyGame.Core.Board.Logic
             _boardStepView = boardStepView;
         }
 
+        public void Dispose()
+        {
+            _isDisposed = true;
+
+            _pendingMoves.Clear();
+            _reservedCellCounters.Clear();
+        }
+
         public void EnqueueMove(BoardMove move)
         {
+            if (_isDisposed)
+                return;
+
             if (_isLevelCompleted)
                 return;
 
             _pendingMoves.Enqueue(move);
 
-            TryAdvanceLogic();
+            TryProcessPipeline();
         }
 
-        private void TryAdvanceLogic()
+        private void TryProcessPipeline()
         {
+            if (_isDisposed)
+                return;
+
             UnityEngine.Debug.Log(
                 $"[Controller] TryAdvanceLogic | pending={_pendingMoves.Count}, move={_activeMoveCount}, fall={_activeFallCount}, destroy={_activeDestroyCount}"
             );
@@ -190,7 +206,7 @@ namespace OpenMyGame.Core.Board.Logic
             ReleaseDelta(delta);
             _activeMoveCount--;
 
-            TryAdvanceLogic();
+            TryProcessPipeline();
         }
 
         private void OnFallCompleted(BoardDelta delta)
@@ -198,7 +214,7 @@ namespace OpenMyGame.Core.Board.Logic
             ReleaseDelta(delta);
             _activeFallCount--;
 
-            TryAdvanceLogic();
+            TryProcessPipeline();
         }
 
         private void OnDestroyCompleted(BoardDelta delta)
@@ -206,7 +222,7 @@ namespace OpenMyGame.Core.Board.Logic
             ReleaseDelta(delta);
             _activeDestroyCount--;
 
-            TryAdvanceLogic();
+            TryProcessPipeline();
         }
 
         private void ReserveDelta(BoardDelta delta)
@@ -222,10 +238,6 @@ namespace OpenMyGame.Core.Board.Logic
                         break;
 
                     case BoardDeltaItemType.Destroy:
-                        ReserveCell(item.From);
-                        break;
-
-                    case BoardDeltaItemType.Set:
                         ReserveCell(item.From);
                         break;
                 }
@@ -245,10 +257,6 @@ namespace OpenMyGame.Core.Board.Logic
                         break;
 
                     case BoardDeltaItemType.Destroy:
-                        ReleaseCell(item.From);
-                        break;
-
-                    case BoardDeltaItemType.Set:
                         ReleaseCell(item.From);
                         break;
                 }
@@ -387,22 +395,22 @@ namespace OpenMyGame.Core.Board.Logic
             }
         }
 
-        private void PlayDelta(BoardDelta delta, System.Action<BoardDelta> onCompleted)
+        private void PlayDelta(BoardDelta delta, Action<BoardDelta> onComplete)
         {
             UnityEngine.Debug.Log($"[Controller] PlayDelta: {delta.Type}, items: {delta.Items.Count}");
 
             switch (delta.Type)
             {
                 case BoardDeltaType.Move:
-                    _boardStepView.ApplyMoveStep(delta, onCompleted);
+                    _boardStepView.ApplyMoveStep(delta, onComplete);
                     break;
 
                 case BoardDeltaType.Fall:
-                    _boardStepView.ApplyFallStep(delta, onCompleted);
+                    _boardStepView.ApplyFallStep(delta, onComplete);
                     break;
 
                 case BoardDeltaType.Destroy:
-                    _boardStepView.ApplyDestroyStep(delta, onCompleted);
+                    _boardStepView.ApplyDestroyStep(delta, onComplete);
                     break;
             }
         }
