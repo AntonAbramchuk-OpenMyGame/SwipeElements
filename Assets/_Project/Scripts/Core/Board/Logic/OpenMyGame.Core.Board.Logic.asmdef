@@ -4,6 +4,7 @@
     "references": [
         "OpenMyGame.Core.Level.Data",
         "OpenMyGame.Core.Board.Data",
+        "OpenMyGame.Core.Progress.Data",
         "OpenMyGame.Core.Board.Logic.Abstractions",
         "OpenMyGame.Core.Board.View.Abstractions",
         "OpenMyGame.Core.Board.Utils"

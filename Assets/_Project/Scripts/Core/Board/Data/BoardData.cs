@@ -54,11 +54,6 @@ namespace OpenMyGame.Core.Board.Data
             return Size.IsInside(coordinates);
         }
 
-        public BoardData Clone()
-        {
-            return new BoardData(Size, _cells);
-        }
-
         public int ToIndex(BoardCoordinates coordinates)
         {
             return coordinates.Y * Width + coordinates.X;
@@ -69,8 +64,8 @@ namespace OpenMyGame.Core.Board.Data
             if (index < 0 || index >= _cells.Length)
                 throw new ArgumentOutOfRangeException(nameof(index));
 
-            int x = index % Width;
-            int y = index / Width;
+            var x = index % Width;
+            var y = index / Width;
             return new BoardCoordinates(x, y);
         }
 

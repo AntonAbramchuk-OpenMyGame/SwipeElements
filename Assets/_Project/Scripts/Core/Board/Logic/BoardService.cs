@@ -15,20 +15,21 @@ namespace OpenMyGame.Core.Board.Logic
 
         public BoardDelta ApplyMoveStep(
             BoardData boardData,
-            BoardMove move)
+            BoardMove move
+        )
         {
             if (boardData == null)
                 throw new ArgumentNullException(nameof(boardData));
 
-            if (!IsMoveValid(boardData, move))
-                return new BoardDelta(BoardDeltaType.Move);
-
             BoardDelta moveDelta = new(BoardDeltaType.Move);
 
-            BoardCoordinates target = move.GetTargetCoordinates();
+            if (!IsMoveValid(boardData, move))
+                return moveDelta;
 
-            CellData originCell = boardData.GetCell(move.Origin);
-            CellData targetCell = boardData.GetCell(target);
+            var target = move.GetTargetCoordinates();
+
+            var originCell = boardData.GetCell(move.Origin);
+            var targetCell = boardData.GetCell(target);
 
             boardData.SetCell(move.Origin, targetCell);
             boardData.SetCell(target, originCell);
@@ -67,12 +68,12 @@ namespace OpenMyGame.Core.Board.Logic
             if (!boardData.IsInside(move.Origin))
                 return false;
 
-            BoardCoordinates target = move.GetTargetCoordinates();
+            var target = move.GetTargetCoordinates();
 
             if (!boardData.IsInside(target))
                 return false;
 
-            CellData originCell = boardData.GetCell(move.Origin);
+            var originCell = boardData.GetCell(move.Origin);
 
             if (originCell.IsEmpty)
                 return false;

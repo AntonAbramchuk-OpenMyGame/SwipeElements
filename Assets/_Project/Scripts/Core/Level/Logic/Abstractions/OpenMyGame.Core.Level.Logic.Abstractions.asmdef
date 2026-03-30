@@ -1,0 +1,17 @@
+{
+    "name": "OpenMyGame.Core.Level.Logic.Abstractions",
+    "rootNamespace": "OpenMyGame.Core.Level.Logic.Abstractions",
+    "references": [
+        "UniTask",
+        "OpenMyGame.Core.Level.Data"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

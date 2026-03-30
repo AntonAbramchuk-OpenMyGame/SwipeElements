@@ -3,7 +3,8 @@
     "rootNamespace": "OpenMyGame.Core.Board.Logic.Abstractions",
     "references": [
         "OpenMyGame.Core.Level.Data",
-        "OpenMyGame.Core.Board.Data"
+        "OpenMyGame.Core.Board.Data",
+        "OpenMyGame.Core.Progress.Data"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

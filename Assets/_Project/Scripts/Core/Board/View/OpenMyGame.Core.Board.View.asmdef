@@ -4,7 +4,8 @@
     "references": [
         "OpenMyGame.Core.Board.Data",
         "OpenMyGame.Core.Board.Logic.Abstractions",
-        "OpenMyGame.Core.Board.View.Abstractions"
+        "OpenMyGame.Core.Board.View.Abstractions",
+        "OpenMyGame.Core.Board.Utils"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

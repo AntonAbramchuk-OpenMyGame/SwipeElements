@@ -2,13 +2,21 @@
     "name": "OpenMyGame.Core.Bootstrap",
     "rootNamespace": "OpenMyGame.Core.Bootstrap",
     "references": [
-        "OpenMyGame.Core.Level.Data",
+        "Zenject",
+        "UniTask",
         "OpenMyGame.Core.Board.Data",
         "OpenMyGame.Core.Board.Logic",
         "OpenMyGame.Core.Board.Logic.Abstractions",
         "OpenMyGame.Core.Board.View",
         "OpenMyGame.Core.Board.View.Abstractions",
-        "OpenMyGame.Core.Board.Utils"
+        "OpenMyGame.Core.Board.Utils",
+        "OpenMyGame.Core.Level.Data",
+        "OpenMyGame.Core.Level.Logic",
+        "OpenMyGame.Core.Level.Logic.Abstractions",
+        "OpenMyGame.Core.Progress.Data",
+        "OpenMyGame.Core.Progress.Logic",
+        "OpenMyGame.Core.Progress.Logic.Abstractions",
+        "OpenMyGame.Core.UI"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

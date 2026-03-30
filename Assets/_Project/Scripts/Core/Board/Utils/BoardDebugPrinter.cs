@@ -4,8 +4,10 @@ using UnityEngine;
 
 namespace OpenMyGame.Core.Board.Utils
 {
+    // ReSharper disable once UnusedType.Global;
     public static class BoardDebugPrinter
     {
+        // ReSharper disable once UnusedMember.Global;
         public static void Print(BoardData boardData)
         {
             if (boardData == null)

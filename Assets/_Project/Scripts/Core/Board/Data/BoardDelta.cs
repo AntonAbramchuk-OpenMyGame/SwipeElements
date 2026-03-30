@@ -9,7 +9,6 @@ namespace OpenMyGame.Core.Board.Data
         public readonly BoardDeltaType Type;
 
         public IReadOnlyList<BoardDeltaItem> Items => _items;
-
         public bool HasItems => _items.Count > 0;
 
         public BoardDelta(BoardDeltaType type)
@@ -20,11 +19,6 @@ namespace OpenMyGame.Core.Board.Data
         public void AddItem(BoardDeltaItem item)
         {
             _items.Add(item);
-        }
-
-        public void Clear()
-        {
-            _items.Clear();
         }
     }
 }

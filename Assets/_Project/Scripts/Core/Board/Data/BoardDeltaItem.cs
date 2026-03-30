@@ -18,7 +18,8 @@
             BoardCoordinates from,
             BoardCoordinates to,
             CellData previousCell,
-            CellData currentCell)
+            CellData currentCell
+        )
         {
             Type = type;
             From = from;
@@ -30,26 +31,30 @@
         public static BoardDeltaItem CreateMove(
             BoardCoordinates from,
             BoardCoordinates to,
-            CellData cellData)
+            CellData cellData
+        )
         {
             return new BoardDeltaItem(
                 BoardDeltaItemType.Move,
                 from,
                 to,
                 cellData,
-                cellData);
+                cellData
+            );
         }
 
         public static BoardDeltaItem CreateDestroy(
             BoardCoordinates at,
-            CellData previousCell)
+            CellData previousCell
+        )
         {
             return new BoardDeltaItem(
                 BoardDeltaItemType.Destroy,
                 at,
                 at,
                 previousCell,
-                CellData.Empty);
+                CellData.Empty
+            );
         }
     }
 }

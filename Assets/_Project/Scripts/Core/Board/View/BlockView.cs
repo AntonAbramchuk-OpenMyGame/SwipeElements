@@ -31,7 +31,7 @@ namespace OpenMyGame.Core.Board.View
             BlockTypeId = blockTypeId;
             BlockId = blockId;
 
-            int startFrame = Random.Range(0, idleFrames.Length);
+            var startFrame = Random.Range(0, idleFrames.Length);
             PlayIdle(startFrame);
 
 #if UNITY_EDITOR
@@ -72,8 +72,8 @@ namespace OpenMyGame.Core.Board.View
         {
             StopIdle();
 
-            float duration = destroyFrames.Length / destroyFps;
-            int frame = 0;
+            var duration = destroyFrames.Length / destroyFps;
+            var frame = 0;
 
             return DOTween.To(
                     () => frame,
@@ -81,7 +81,7 @@ namespace OpenMyGame.Core.Board.View
                     {
                         frame = x;
 
-                        int clamped = Mathf.Clamp(frame, 0, destroyFrames.Length - 1);
+                        var clamped = Mathf.Clamp(frame, 0, destroyFrames.Length - 1);
                         spriteRenderer.sprite = destroyFrames[clamped];
                     },
                     destroyFrames.Length - 1,
@@ -105,10 +105,10 @@ namespace OpenMyGame.Core.Board.View
 
         private IEnumerator IdleRoutine(int startFrame)
         {
-            float delay = 1.0f / idleFps;
-            WaitForSeconds waitForSeconds = new WaitForSeconds(delay);
+            var delay = 1.0f / idleFps;
+            var waitForSeconds = new WaitForSeconds(delay);
 
-            int index = startFrame;
+            var index = startFrame;
 
             while (gameObject.activeSelf)
             {

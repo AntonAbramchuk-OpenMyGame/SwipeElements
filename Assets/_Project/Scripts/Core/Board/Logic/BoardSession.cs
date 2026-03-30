@@ -2,6 +2,7 @@
 using OpenMyGame.Core.Board.Data;
 using OpenMyGame.Core.Board.Logic.Abstractions;
 using OpenMyGame.Core.Level.Data;
+using OpenMyGame.Core.Progress.Data;
 
 namespace OpenMyGame.Core.Board.Logic
 {
@@ -11,7 +12,8 @@ namespace OpenMyGame.Core.Board.Logic
         private readonly IBoardFactory _boardFactory;
 
         public BoardData BoardData { get; private set; }
-        public bool IsInitialized => BoardData != null;
+
+        private bool IsInitialized => BoardData != null;
 
         public BoardSession(
             IBoardService boardService,
@@ -25,6 +27,11 @@ namespace OpenMyGame.Core.Board.Logic
         public void Initialize(LevelConfigData levelConfigData)
         {
             BoardData = _boardFactory.CreateFromConfig(levelConfigData);
+        }
+
+        public void Initialize(BoardSaveData boardSaveData)
+        {
+            BoardData = _boardFactory.CreateFromSave(boardSaveData);
         }
 
         public BoardDelta ApplyMoveStep(BoardMove move)

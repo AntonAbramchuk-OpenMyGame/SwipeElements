@@ -2,13 +2,15 @@
 using System.Collections.Generic;
 using OpenMyGame.Core.Board.Data;
 using OpenMyGame.Core.Board.Logic.Abstractions;
-using OpenMyGame.Core.Board.Utils;
 using OpenMyGame.Core.Board.View.Abstractions;
 
 namespace OpenMyGame.Core.Board.Logic
 {
     public sealed class BoardController : IBoardController
     {
+        public event Action Settled;
+        public event Action LevelCompleted;
+
         private readonly IBoardSession _boardSession;
         private readonly ILevelWinCondition _levelWinCondition;
         private readonly IBoardStepView _boardStepView;
@@ -22,7 +24,7 @@ namespace OpenMyGame.Core.Board.Logic
         private bool _isLevelCompleted;
         private bool _isDisposed;
 
-        public BoardData BoardData => _boardSession.BoardData;
+        private BoardData BoardData => _boardSession.BoardData;
 
         public BoardController(
             IBoardSession boardSession,
@@ -38,6 +40,9 @@ namespace OpenMyGame.Core.Board.Logic
         public void Dispose()
         {
             _isDisposed = true;
+
+            Settled = null;
+            LevelCompleted = null;
 
             _pendingMoves.Clear();
             _reservedCellCounters.Clear();
@@ -64,14 +69,14 @@ namespace OpenMyGame.Core.Board.Logic
             if (!BoardData.IsInside(move.Origin))
                 return false;
 
-            BoardCoordinates target = move.GetTargetCoordinates();
+            var target = move.GetTargetCoordinates();
 
             if (!BoardData.IsInside(target))
                 return false;
 
             if (move.Direction == BoardMoveDirection.Up)
             {
-                CellData targetCell = BoardData.GetCell(target);
+                var targetCell = BoardData.GetCell(target);
 
                 if (targetCell.IsEmpty)
                     return false;
@@ -91,22 +96,16 @@ namespace OpenMyGame.Core.Board.Logic
             if (_isDisposed)
                 return;
 
-            UnityEngine.Debug.Log(
-                $"[Controller] TryAdvanceLogic | pending={_pendingMoves.Count}, move={_activeMoveCount}, fall={_activeFallCount}, destroy={_activeDestroyCount}"
-            );
-
             ProcessPendingMoves();
 
             if (_activeMoveCount > 0)
                 return;
 
-            UnityEngine.Debug.Log("[Controller] About to try fall");
             TryStartFall();
 
             if (_activeMoveCount > 0 || _activeFallCount > 0)
                 return;
 
-            UnityEngine.Debug.Log("[Controller] About to try destroy");
             TryStartDestroy();
 
             if (_activeDestroyCount > 0)
@@ -114,29 +113,35 @@ namespace OpenMyGame.Core.Board.Logic
 
             if (_activeMoveCount == 0 && _activeFallCount == 0)
             {
-                UnityEngine.Debug.Log("[Controller] About to try extra fall");
                 TryStartFall();
 
                 if (_activeFallCount > 0)
                     return;
             }
 
-            TryHandleLevelCompleted();
+            if (TryHandleLevelCompleted())
+                return;
+
+            if (_pendingMoves.Count == 0 &&
+                _activeMoveCount == 0 &&
+                _activeFallCount == 0 &&
+                _activeDestroyCount == 0)
+            {
+                Settled?.Invoke();
+            }
         }
 
         private void ProcessPendingMoves()
         {
             while (_pendingMoves.Count > 0)
             {
-                BoardMove move = _pendingMoves.Peek();
+                var move = _pendingMoves.Peek();
                 _pendingMoves.Dequeue();
 
-                BoardDelta moveDelta = _boardSession.ApplyMoveStep(move);
+                var moveDelta = _boardSession.ApplyMoveStep(move);
 
                 if (!moveDelta.HasItems)
                     continue;
-
-                UnityEngine.Debug.Log("New MoveDelta builded");
 
                 ReserveDelta(moveDelta);
                 _activeMoveCount++;
@@ -147,16 +152,10 @@ namespace OpenMyGame.Core.Board.Logic
 
         private void TryStartFall()
         {
-            BoardDelta fallDelta = _boardSession.BuildFallStep();
-
-            UnityEngine.Debug.Log("New FallDelta builded");
-            BoardDebugPrinter.Print(BoardData);
+            var fallDelta = _boardSession.BuildFallStep();
 
             if (!fallDelta.HasItems)
-            {
-                UnityEngine.Debug.Log("FallDelta is empty");
                 return;
-            }
 
             ReserveDelta(fallDelta);
             _activeFallCount++;
@@ -166,15 +165,7 @@ namespace OpenMyGame.Core.Board.Logic
 
         private void TryStartDestroy()
         {
-            BoardDebugPrinter.Print(BoardData);
-
-            BoardDelta destroyDelta = _boardSession.BuildDestroyStep();
-
-            UnityEngine.Debug.Log("New DestroyDelta builded");
-            UnityEngine.Debug.Log(
-                $"[Controller] DestroyDelta has items = {destroyDelta.HasItems}, count = {destroyDelta.Items.Count}"
-            );
-            BoardDebugPrinter.Print(BoardData);
+            var destroyDelta = _boardSession.BuildDestroyStep();
 
             if (!destroyDelta.HasItems)
                 return;
@@ -185,7 +176,7 @@ namespace OpenMyGame.Core.Board.Logic
             PlayDelta(destroyDelta, OnDestroyCompleted);
         }
 
-        private void TryHandleLevelCompleted()
+        private bool TryHandleLevelCompleted()
         {
             if (_isLevelCompleted ||
                 _pendingMoves.Count > 0 ||
@@ -193,14 +184,16 @@ namespace OpenMyGame.Core.Board.Logic
                 _activeFallCount > 0 ||
                 _activeDestroyCount > 0)
             {
-                return;
+                return false;
             }
 
             if (!_levelWinCondition.IsCompleted(BoardData))
-                return;
+                return false;
 
             _isLevelCompleted = true;
-            UnityEngine.Debug.Log("[Controller] LEVEL COMPLETED");
+            LevelCompleted?.Invoke();
+
+            return true;
         }
 
         private void OnMoveCompleted(BoardDelta delta)
@@ -229,10 +222,8 @@ namespace OpenMyGame.Core.Board.Logic
 
         private void ReserveDelta(BoardDelta delta)
         {
-            for (int i = 0; i < delta.Items.Count; i++)
+            foreach (var item in delta.Items)
             {
-                BoardDeltaItem item = delta.Items[i];
-
                 switch (item.Type)
                 {
                     case BoardDeltaItemType.Move:
@@ -248,10 +239,8 @@ namespace OpenMyGame.Core.Board.Logic
 
         private void ReleaseDelta(BoardDelta delta)
         {
-            for (int i = 0; i < delta.Items.Count; i++)
+            foreach (var item in delta.Items)
             {
-                BoardDeltaItem item = delta.Items[i];
-
                 switch (item.Type)
                 {
                     case BoardDeltaItemType.Move:
@@ -299,11 +288,11 @@ namespace OpenMyGame.Core.Board.Logic
         {
             if (item.From.X == item.To.X)
             {
-                int x = item.From.X;
-                int minY = item.From.Y < item.To.Y ? item.From.Y : item.To.Y;
-                int maxY = item.From.Y > item.To.Y ? item.From.Y : item.To.Y;
+                var x = item.From.X;
+                var minY = item.From.Y < item.To.Y ? item.From.Y : item.To.Y;
+                var maxY = item.From.Y > item.To.Y ? item.From.Y : item.To.Y;
 
-                for (int y = minY; y <= maxY; y++)
+                for (var y = minY; y <= maxY; y++)
                 {
                     ReserveCell(new BoardCoordinates(x, y));
                 }
@@ -319,11 +308,11 @@ namespace OpenMyGame.Core.Board.Logic
 
             if (item.From.Y == item.To.Y)
             {
-                int y = item.From.Y;
-                int minX = item.From.X < item.To.X ? item.From.X : item.To.X;
-                int maxX = item.From.X > item.To.X ? item.From.X : item.To.X;
+                var y = item.From.Y;
+                var minX = item.From.X < item.To.X ? item.From.X : item.To.X;
+                var maxX = item.From.X > item.To.X ? item.From.X : item.To.X;
 
-                for (int x = minX; x <= maxX; x++)
+                for (var x = minX; x <= maxX; x++)
                 {
                     ReserveCell(new BoardCoordinates(x, y));
                 }
@@ -334,11 +323,11 @@ namespace OpenMyGame.Core.Board.Logic
         {
             if (item.From.X == item.To.X)
             {
-                int x = item.From.X;
-                int minY = item.From.Y < item.To.Y ? item.From.Y : item.To.Y;
-                int maxY = item.From.Y > item.To.Y ? item.From.Y : item.To.Y;
+                var x = item.From.X;
+                var minY = item.From.Y < item.To.Y ? item.From.Y : item.To.Y;
+                var maxY = item.From.Y > item.To.Y ? item.From.Y : item.To.Y;
 
-                for (int y = minY; y <= maxY; y++)
+                for (var y = minY; y <= maxY; y++)
                 {
                     ReleaseCell(new BoardCoordinates(x, y));
                 }
@@ -354,11 +343,11 @@ namespace OpenMyGame.Core.Board.Logic
 
             if (item.From.Y == item.To.Y)
             {
-                int y = item.From.Y;
-                int minX = item.From.X < item.To.X ? item.From.X : item.To.X;
-                int maxX = item.From.X > item.To.X ? item.From.X : item.To.X;
+                var y = item.From.Y;
+                var minX = item.From.X < item.To.X ? item.From.X : item.To.X;
+                var maxX = item.From.X > item.To.X ? item.From.X : item.To.X;
 
-                for (int x = minX; x <= maxX; x++)
+                for (var x = minX; x <= maxX; x++)
                 {
                     ReleaseCell(new BoardCoordinates(x, y));
                 }
@@ -367,12 +356,12 @@ namespace OpenMyGame.Core.Board.Logic
 
         private bool IsReserved(BoardCoordinates coordinates)
         {
-            return _reservedCellCounters.TryGetValue(coordinates, out int count) && count > 0;
+            return _reservedCellCounters.TryGetValue(coordinates, out var count) && count > 0;
         }
 
         private void ReserveCell(BoardCoordinates coordinates)
         {
-            if (_reservedCellCounters.TryGetValue(coordinates, out int count))
+            if (_reservedCellCounters.TryGetValue(coordinates, out var count))
             {
                 _reservedCellCounters[coordinates] = count + 1;
             }
@@ -384,7 +373,7 @@ namespace OpenMyGame.Core.Board.Logic
 
         private void ReleaseCell(BoardCoordinates coordinates)
         {
-            if (!_reservedCellCounters.TryGetValue(coordinates, out int count))
+            if (!_reservedCellCounters.TryGetValue(coordinates, out var count))
                 return;
 
             if (count <= 1)
@@ -399,8 +388,6 @@ namespace OpenMyGame.Core.Board.Logic
 
         private void PlayDelta(BoardDelta delta, Action<BoardDelta> onComplete)
         {
-            UnityEngine.Debug.Log($"[Controller] PlayDelta: {delta.Type}, items: {delta.Items.Count}");
-
             switch (delta.Type)
             {
                 case BoardDeltaType.Move:
