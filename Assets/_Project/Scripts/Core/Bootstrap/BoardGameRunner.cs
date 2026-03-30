@@ -56,6 +56,7 @@ namespace OpenMyGame.Core.Bootstrap
             _cts = new CancellationTokenSource();
 
             _gameHudView.RestartClicked += OnRestartClicked;
+            _gameHudView.SkipClicked += OnSkipClicked;
             _gameHudView.NextClicked += OnNextClicked;
             _gameHudView.HideWinScreen();
 
@@ -67,6 +68,7 @@ namespace OpenMyGame.Core.Bootstrap
             DisposeBoardFlow();
 
             _gameHudView.RestartClicked -= OnRestartClicked;
+            _gameHudView.SkipClicked -= OnSkipClicked;
             _gameHudView.NextClicked -= OnNextClicked;
 
             _cts?.Cancel();
@@ -181,6 +183,12 @@ namespace OpenMyGame.Core.Bootstrap
             await StartLevelByProgressAsync(GetCompletedLevelsCount(), cancellationToken);
         }
 
+        private async UniTask SkipLevelAsync(CancellationToken cancellationToken)
+        {
+            int completedLevelsCount = GetCompletedLevelsCount() + 1;
+            await StartLevelByProgressAsync(completedLevelsCount, cancellationToken);
+        }
+
         private UniTask SaveCurrentRunAsync(int completedLevelsCount, CancellationToken cancellationToken)
         {
             GameProgressData progressData = new()
@@ -222,6 +230,11 @@ namespace OpenMyGame.Core.Bootstrap
         private void OnRestartClicked()
         {
             RunGuarded(RestartCurrentLevelAsync, useTransitionLock: true);
+        }
+
+        private void OnSkipClicked()
+        {
+            RunGuarded(SkipLevelAsync, useTransitionLock: true);
         }
 
         // ---------------------------------------------------------------------

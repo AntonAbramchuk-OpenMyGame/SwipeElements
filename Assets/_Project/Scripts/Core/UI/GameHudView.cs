@@ -7,9 +7,11 @@ namespace OpenMyGame.Core.UI
     public sealed class GameHudView : MonoBehaviour
     {
         public event Action RestartClicked;
+        public event Action SkipClicked;
         public event Action NextClicked;
 
         [SerializeField] private Button restartButton;
+        [SerializeField] private Button skipButton;
         [SerializeField] private GameObject winScreenRoot;
         [SerializeField] private Button nextButton;
 
@@ -17,6 +19,9 @@ namespace OpenMyGame.Core.UI
         {
             if (restartButton)
                 restartButton.onClick.AddListener(OnRestartClicked);
+
+            if (skipButton)
+                skipButton.onClick.AddListener(OnSkipClicked);
 
             if (nextButton)
                 nextButton.onClick.AddListener(OnNextClicked);
@@ -28,6 +33,9 @@ namespace OpenMyGame.Core.UI
         {
             if (restartButton)
                 restartButton.onClick.RemoveListener(OnRestartClicked);
+
+            if (skipButton)
+                skipButton.onClick.RemoveListener(OnSkipClicked);
 
             if (nextButton)
                 nextButton.onClick.RemoveListener(OnNextClicked);
@@ -48,6 +56,11 @@ namespace OpenMyGame.Core.UI
         private void OnRestartClicked()
         {
             RestartClicked?.Invoke();
+        }
+
+        private void OnSkipClicked()
+        {
+            SkipClicked?.Invoke();
         }
 
         private void OnNextClicked()

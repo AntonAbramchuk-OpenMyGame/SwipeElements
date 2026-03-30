@@ -65,7 +65,7 @@ namespace OpenMyGame.Core.Progress.Logic
         public UniTask SaveAsync(GameProgressData progressData, CancellationToken cancellationToken)
         {
             if (!IsValid(progressData))
-                throw new ArgumentException("[JsonGameProgressService] Progress data is invalid.");
+                throw new ArgumentException("[GameProgressService] Progress data is invalid.");
 
             string json = JsonUtility.ToJson(progressData, true);
             string filePath = GetFilePath();
