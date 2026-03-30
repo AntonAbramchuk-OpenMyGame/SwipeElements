@@ -57,8 +57,6 @@ namespace OpenMyGame.Core.Bootstrap
 
             _gameHudView.RestartClicked += OnRestartClicked;
             _gameHudView.SkipClicked += OnSkipClicked;
-            _gameHudView.NextClicked += OnNextClicked;
-            _gameHudView.HideWinScreen();
 
             RunGuarded(InitializeCoreAsync, true);
         }
@@ -69,7 +67,6 @@ namespace OpenMyGame.Core.Bootstrap
 
             _gameHudView.RestartClicked -= OnRestartClicked;
             _gameHudView.SkipClicked -= OnSkipClicked;
-            _gameHudView.NextClicked -= OnNextClicked;
 
             _cts?.Cancel();
             _cts?.Dispose();
@@ -140,8 +137,6 @@ namespace OpenMyGame.Core.Bootstrap
 
             var levelConfig = await _levelProvider.LoadLevelByIdAsync(_currentLevelId, cancellationToken);
 
-            _gameHudView.HideWinScreen();
-
             RecreateBoardFlow();
             _boardSession.Initialize(levelConfig);
             _boardView.Build(_boardSession.BoardData);
@@ -151,20 +146,8 @@ namespace OpenMyGame.Core.Bootstrap
 
         private async UniTask NextLevelAsync(CancellationToken cancellationToken)
         {
-            _gameHudView.HideWinScreen();
-            await StartLevelByProgressAsync(_gameProgressService.GetCompletedLevelsCount(), cancellationToken);
-        }
-
-        private async UniTask SkipLevelAsync(CancellationToken cancellationToken)
-        {
             _gameProgressService.MarkLevelCompleted();
             await StartLevelByProgressAsync(_gameProgressService.GetCompletedLevelsCount(), cancellationToken);
-        }
-
-        private void CompleteLevel()
-        {
-            _gameProgressService.MarkLevelCompleted();
-            _gameHudView.ShowWinScreen();
         }
 
         private void SaveCurrentRun()
@@ -185,14 +168,6 @@ namespace OpenMyGame.Core.Bootstrap
 
         private void OnLevelCompleted()
         {
-            if (_isTransitionInProgress)
-                return;
-
-            CompleteLevel();
-        }
-
-        private void OnNextClicked()
-        {
             RunGuarded(NextLevelAsync, true);
         }
 
@@ -203,7 +178,7 @@ namespace OpenMyGame.Core.Bootstrap
 
         private void OnSkipClicked()
         {
-            RunGuarded(SkipLevelAsync, true);
+            RunGuarded(NextLevelAsync, true);
         }
 
         private void RecreateBoardFlow()

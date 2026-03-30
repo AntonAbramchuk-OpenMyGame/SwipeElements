@@ -8,12 +8,9 @@ namespace OpenMyGame.Core.UI
     {
         public event Action RestartClicked;
         public event Action SkipClicked;
-        public event Action NextClicked;
 
         [SerializeField] private Button restartButton;
         [SerializeField] private Button skipButton;
-        [SerializeField] private GameObject winScreenRoot;
-        [SerializeField] private Button nextButton;
 
         private void Awake()
         {
@@ -22,11 +19,6 @@ namespace OpenMyGame.Core.UI
 
             if (skipButton)
                 skipButton.onClick.AddListener(OnSkipClicked);
-
-            if (nextButton)
-                nextButton.onClick.AddListener(OnNextClicked);
-
-            HideWinScreen();
         }
 
         private void OnDestroy()
@@ -36,21 +28,6 @@ namespace OpenMyGame.Core.UI
 
             if (skipButton)
                 skipButton.onClick.RemoveListener(OnSkipClicked);
-
-            if (nextButton)
-                nextButton.onClick.RemoveListener(OnNextClicked);
-        }
-
-        public void ShowWinScreen()
-        {
-            if (winScreenRoot)
-                winScreenRoot.SetActive(true);
-        }
-
-        public void HideWinScreen()
-        {
-            if (winScreenRoot)
-                winScreenRoot.SetActive(false);
         }
 
         private void OnRestartClicked()
@@ -61,11 +38,6 @@ namespace OpenMyGame.Core.UI
         private void OnSkipClicked()
         {
             SkipClicked?.Invoke();
-        }
-
-        private void OnNextClicked()
-        {
-            NextClicked?.Invoke();
         }
     }
 }
