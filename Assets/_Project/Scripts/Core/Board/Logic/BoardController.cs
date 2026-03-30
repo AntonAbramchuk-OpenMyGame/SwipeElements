@@ -223,6 +223,8 @@ namespace OpenMyGame.Core.Board.Logic
 
         private void OnMoveCompleted(BoardDelta delta)
         {
+            UnityEngine.Debug.Log("[Controller] OnMoveCompleted");
+
             ReleaseDelta(delta);
             _activeMoveCount--;
 
@@ -231,6 +233,8 @@ namespace OpenMyGame.Core.Board.Logic
 
         private void OnFallCompleted(BoardDelta delta)
         {
+            UnityEngine.Debug.Log("[Controller] OnFallCompleted");
+
             ReleaseDelta(delta);
             _activeFallCount--;
 
@@ -239,6 +243,8 @@ namespace OpenMyGame.Core.Board.Logic
 
         private void OnDestroyCompleted(BoardDelta delta)
         {
+            UnityEngine.Debug.Log("[Controller] OnDestroyCompleted");
+
             ReleaseDelta(delta);
             _activeDestroyCount--;
 
