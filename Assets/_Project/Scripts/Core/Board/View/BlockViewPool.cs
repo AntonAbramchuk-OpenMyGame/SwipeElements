@@ -9,10 +9,17 @@ namespace OpenMyGame.Core.Board.View
     {
         private readonly IReadOnlyDictionary<int, BlockView> _prefabsByType;
         private readonly Dictionary<int, Stack<BlockView>> _poolByType = new();
+        private readonly Transform _poolParent;
 
-        public BlockViewPool(IReadOnlyDictionary<int, BlockView> prefabsByType)
+        public BlockViewPool(IReadOnlyDictionary<int, BlockView> prefabsByType, Transform poolParent = null)
         {
             _prefabsByType = prefabsByType;
+            _poolParent = poolParent;
+
+            if (!_poolParent)
+            {
+                _poolParent = new GameObject(nameof(BlockViewPool)).transform;
+            }
 
             foreach (var pair in _prefabsByType)
             {
@@ -62,7 +69,7 @@ namespace OpenMyGame.Core.Board.View
             }
 
             blockView.Release();
-            blockView.transform.SetParent(null, false);
+            blockView.transform.SetParent(_poolParent, false);
             blockView.gameObject.SetActive(false);
 
             if (pool.Contains(blockView))

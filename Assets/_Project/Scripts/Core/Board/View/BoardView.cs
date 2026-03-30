@@ -17,6 +17,7 @@ namespace OpenMyGame.Core.Board.View
         [Header("Refs")] [SerializeField] private Camera boardCamera;
         [SerializeField] private SpriteRenderer backgroundRenderer;
         [SerializeField] private Transform blocksRoot;
+        [SerializeField] private Transform blocksPoolRoot;
         [SerializeField] private List<BlockViewEntry> blockPrefabs;
 
         [Header("Layout")] [SerializeField] private float baseCellSize = 1.0f;
@@ -36,7 +37,7 @@ namespace OpenMyGame.Core.Board.View
         private void Awake()
         {
             CollectBlockPrefabsByType();
-            _blockViewPool = new BlockViewPool(_prefabsByType);
+            _blockViewPool = new BlockViewPool(_prefabsByType, blocksPoolRoot);
         }
 
         private void OnDestroy()
