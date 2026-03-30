@@ -149,15 +149,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::OpenMyGame.Core.Board.View.BoardView
   boardCamera: {fileID: 1272186341}
+  backgroundRenderer: {fileID: 1173845410}
   blocksRoot: {fileID: 1998174761}
   blockPrefabs:
   - blockTypeId: 0
     prefab: {fileID: 3417571155924465371, guid: 1f8c895089eb387418cebaafb9b083cf, type: 3}
   - blockTypeId: 1
     prefab: {fileID: 68160466851621297, guid: 51093e7df6c9153489de8dba999fffcb, type: 3}
-  cellSize: 1.97
-  boardWidthPadding: 2
-  fixedCameraBottomY: -12.2
+  baseCellSize: 1.97
   minCameraSize: 10
   boardSortingLayerName: Board
 --- !u!4 &48868026
@@ -746,7 +745,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1.08, y: 1.08, z: 1.08}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -1587,7 +1586,7 @@ Transform:
   m_GameObject: {fileID: 1998174760}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: -7.3, z: 0}
+  m_LocalPosition: {x: 0, y: -6.5, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

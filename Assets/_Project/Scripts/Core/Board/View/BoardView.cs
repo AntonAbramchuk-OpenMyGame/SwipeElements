@@ -15,12 +15,11 @@ namespace OpenMyGame.Core.Board.View
         private const float FallSpeed = 8.0f;
 
         [Header("Refs")] [SerializeField] private Camera boardCamera;
+        [SerializeField] private SpriteRenderer backgroundRenderer;
         [SerializeField] private Transform blocksRoot;
         [SerializeField] private List<BlockViewEntry> blockPrefabs;
 
-        [Header("Layout")] [SerializeField] private float cellSize = 1.0f;
-        [SerializeField] private float boardWidthPadding = 2.0f;
-        [SerializeField] private float fixedCameraBottomY = -11.3f;
+        [Header("Layout")] [SerializeField] private float baseCellSize = 1.0f;
         [SerializeField] private float minCameraSize = 10.0f;
         [SerializeField] private string boardSortingLayerName = "Board";
 
@@ -31,6 +30,8 @@ namespace OpenMyGame.Core.Board.View
         private BoardSize _boardSize;
         private BlockViewPool _blockViewPool;
         private int _viewVersion;
+        private float _currentCellSize;
+        private float _currentBlockScale = 1.0f;
 
         private void Awake()
         {
@@ -54,6 +55,7 @@ namespace OpenMyGame.Core.Board.View
             Clear();
 
             _boardSize = boardData.Size;
+            AdjustBoardAndCamera();
 
             for (int y = 0; y < boardData.Height; y++)
             {
@@ -68,8 +70,6 @@ namespace OpenMyGame.Core.Board.View
                     CreateBlockView(cellData, coord);
                 }
             }
-
-            AdjustBoardAndCamera();
         }
 
         public void ApplyMoveStep(BoardDelta delta, Action<BoardDelta> onComplete)
@@ -206,6 +206,7 @@ namespace OpenMyGame.Core.Board.View
             }
 
             blockView.Initialize(cellData.BlockTypeId, cellData.BlockId);
+            blockView.transform.localScale = new Vector3(_currentBlockScale, _currentBlockScale, 1f);
             blockView.SetPosition(GetBlockWorldPosition(coord));
             blockView.SetSorting(boardSortingLayerName, GetBlockSortingOrder(coord));
 
@@ -215,25 +216,100 @@ namespace OpenMyGame.Core.Board.View
 
         private void AdjustBoardAndCamera()
         {
+            float aspect = boardCamera.aspect;
+
+            Bounds backgroundBounds = backgroundRenderer.bounds;
+            float bgLeft = backgroundBounds.min.x;
+            float bgRight = backgroundBounds.max.x;
+            float bgBottom = backgroundBounds.min.y;
+            float bgTop = backgroundBounds.max.y;
+            float bgWidth = backgroundBounds.size.x;
+            float bgHeight = backgroundBounds.size.y;
+
+            float maxCameraSizeByHeight = bgHeight * 0.5f;
+            float maxCameraSizeByWidth = bgWidth / (2f * aspect);
+            float maxCameraSizeByBackground = Mathf.Min(maxCameraSizeByHeight, maxCameraSizeByWidth);
+
+            float basePadding = baseCellSize;
+
+            float requiredSizeForBaseWidth =
+                (_boardSize.Width * baseCellSize + basePadding * 2f) / (2f * aspect);
+
+            float requiredSizeForBaseHeight =
+                (_boardSize.Height * baseCellSize + basePadding * 2f) * 0.5f;
+
+            float requiredCameraSizeForBaseCell =
+                Mathf.Max(minCameraSize, requiredSizeForBaseWidth, requiredSizeForBaseHeight);
+
+            float finalCellSize;
+            float targetCameraSize;
+
+            if (requiredCameraSizeForBaseCell <= maxCameraSizeByBackground)
+            {
+                finalCellSize = baseCellSize;
+                targetCameraSize = requiredCameraSizeForBaseCell;
+            }
+            else
+            {
+                float maxVisibleWidth = 2f * maxCameraSizeByBackground * aspect;
+                float maxVisibleHeight = 2f * maxCameraSizeByBackground;
+
+                float cellSizeByWidth = maxVisibleWidth / (_boardSize.Width + 2f);
+                float cellSizeByHeight = maxVisibleHeight / (_boardSize.Height + 2f);
+
+                finalCellSize = Mathf.Min(baseCellSize, cellSizeByWidth, cellSizeByHeight);
+                finalCellSize = Mathf.Max(finalCellSize, 0.0001f);
+
+                float finalPadding = finalCellSize;
+
+                float sizeForWidth =
+                    (_boardSize.Width * finalCellSize + finalPadding * 2f) / (2f * aspect);
+
+                float sizeForHeight =
+                    (_boardSize.Height * finalCellSize + finalPadding * 2f) * 0.5f;
+
+                targetCameraSize = Mathf.Max(minCameraSize, sizeForWidth, sizeForHeight);
+                targetCameraSize = Mathf.Min(targetCameraSize, maxCameraSizeByBackground);
+            }
+
+            _currentCellSize = finalCellSize;
+            _currentBlockScale = finalCellSize / baseCellSize;
+
+            blocksRoot.localScale = Vector3.one;
+
             Vector3 blocksRootPos = blocksRoot.position;
-            blocksRootPos.x = -((_boardSize.Width - 1) * cellSize * 0.5f);
+            blocksRootPos.x = -((_boardSize.Width - 1) * _currentCellSize * 0.5f);
             blocksRoot.position = blocksRootPos;
 
-            float boardWidth = _boardSize.Width * cellSize;
-            float boardHeight = _boardSize.Height * cellSize;
+            float finalBoardWidth = _boardSize.Width * finalCellSize;
+            float finalBoardHeight = _boardSize.Height * finalCellSize;
+            float finalPaddingSize = finalCellSize;
 
-            float boardBottomY = blocksRoot.position.y - cellSize * 0.5f;
-            float cameraBottomY = Mathf.Min(boardBottomY, fixedCameraBottomY);
-            float bottomMargin = boardBottomY - cameraBottomY;
+            float boardBottomY = blocksRoot.position.y - finalCellSize * 0.5f;
+            float boardTopY = boardBottomY + finalBoardHeight;
 
-            float sizeForHeight = (boardHeight + bottomMargin * 2) * 0.5f;
-            float sizeForWidth = (boardWidth + boardWidthPadding * 2) / (2 * boardCamera.aspect);
+            float cameraBottomIfAttachedToBackground = bgBottom;
+            float cameraTopIfAttachedToBackground = cameraBottomIfAttachedToBackground + 2f * targetCameraSize;
 
-            float targetSize = Mathf.Max(minCameraSize, sizeForHeight, sizeForWidth);
-            boardCamera.orthographicSize = targetSize;
+            float requiredBoardTopWithPadding = boardTopY + finalPaddingSize;
+
+            float cameraBottom;
+
+            if (cameraTopIfAttachedToBackground >= requiredBoardTopWithPadding)
+            {
+                cameraBottom = bgBottom;
+            }
+            else
+            {
+                float desiredBottom = boardBottomY - finalPaddingSize;
+                float maxCameraBottom = bgTop - 2f * targetCameraSize;
+                cameraBottom = Mathf.Clamp(desiredBottom, bgBottom, maxCameraBottom);
+            }
+
+            boardCamera.orthographicSize = targetCameraSize;
 
             Vector3 cameraPos = boardCamera.transform.position;
-            cameraPos.y = cameraBottomY + targetSize;
+            cameraPos.y = cameraBottom + targetCameraSize;
             boardCamera.transform.position = cameraPos;
         }
 
@@ -292,8 +368,8 @@ namespace OpenMyGame.Core.Board.View
             Vector3 blocksRootPosition = blocksRoot.position;
 
             return new Vector3(
-                blocksRootPosition.x + coord.X * cellSize,
-                blocksRootPosition.y + coord.Y * cellSize,
+                blocksRootPosition.x + coord.X * _currentCellSize,
+                blocksRootPosition.y + coord.Y * _currentCellSize,
                 0.0f
             );
         }
