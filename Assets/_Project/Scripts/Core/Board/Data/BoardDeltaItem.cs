@@ -11,7 +11,6 @@
         public readonly CellData CurrentCell;
 
         public bool IsMove => Type == BoardDeltaItemType.Move;
-        public bool IsSet => Type == BoardDeltaItemType.Set;
         public bool IsDestroy => Type == BoardDeltaItemType.Destroy;
 
         private BoardDeltaItem(
@@ -19,7 +18,8 @@
             BoardCoordinates from,
             BoardCoordinates to,
             CellData previousCell,
-            CellData currentCell)
+            CellData currentCell
+        )
         {
             Type = type;
             From = from;
@@ -31,39 +31,30 @@
         public static BoardDeltaItem CreateMove(
             BoardCoordinates from,
             BoardCoordinates to,
-            CellData cellData)
+            CellData cellData
+        )
         {
             return new BoardDeltaItem(
                 BoardDeltaItemType.Move,
                 from,
                 to,
                 cellData,
-                cellData);
-        }
-
-        public static BoardDeltaItem CreateSet(
-            BoardCoordinates at,
-            CellData previousCell,
-            CellData currentCell)
-        {
-            return new BoardDeltaItem(
-                BoardDeltaItemType.Set,
-                at,
-                at,
-                previousCell,
-                currentCell);
+                cellData
+            );
         }
 
         public static BoardDeltaItem CreateDestroy(
             BoardCoordinates at,
-            CellData previousCell)
+            CellData previousCell
+        )
         {
             return new BoardDeltaItem(
                 BoardDeltaItemType.Destroy,
                 at,
                 at,
                 previousCell,
-                CellData.Empty);
+                CellData.Empty
+            );
         }
     }
 }

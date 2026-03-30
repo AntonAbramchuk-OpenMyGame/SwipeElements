@@ -2,21 +2,25 @@ using System;
 
 namespace OpenMyGame.Core.Board.Data
 {
-    public struct CellData : IEquatable<CellData>
+    public readonly struct CellData : IEquatable<CellData>
     {
-        public const int EmptyBlockTypeId = -1;
+        private const int EmptyBlockTypeId = -1;
         public const int EmptyBlockId = -1;
 
-        public int BlockTypeId;
-        public int BlockId;
+        public readonly int BlockTypeId;
+        public readonly int BlockId;
 
         public bool IsEmpty => BlockTypeId == EmptyBlockTypeId;
-        public bool IsFilled => BlockTypeId != EmptyBlockTypeId;
 
-        public CellData(int blockTypeId, int blockId)
+        private CellData(int blockTypeId, int blockId)
         {
             BlockTypeId = blockTypeId;
             BlockId = blockId;
+        }
+
+        public bool IsMatch(int otherTypeId)
+        {
+            return BlockTypeId == otherTypeId;
         }
 
         public bool Equals(CellData other)

@@ -1,0 +1,19 @@
+{
+    "name": "OpenMyGame.Core.Progress.Logic",
+    "rootNamespace": "OpenMyGame.Core.Progress.Logic",
+    "references": [
+        "UniTask",
+        "OpenMyGame.Core.Board.Data",
+        "OpenMyGame.Core.Progress.Data",
+        "OpenMyGame.Core.Progress.Logic.Abstractions"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

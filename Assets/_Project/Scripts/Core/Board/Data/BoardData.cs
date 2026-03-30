@@ -11,27 +11,6 @@ namespace OpenMyGame.Core.Board.Data
         public int Width => Size.Width;
         public int Height => Size.Height;
 
-        public CellData this[int x, int y]
-        {
-            get => _cells[y * Width + x];
-            set => _cells[y * Width + x] = value;
-        }
-
-        public CellData this[BoardCoordinates coordinates]
-        {
-            get => GetCell(coordinates);
-            set => SetCell(coordinates, value);
-        }
-
-        public BoardData(BoardSize size)
-        {
-            Size = size;
-            _cells = new CellData[size.CellCount];
-
-            for (int i = 0; i < _cells.Length; i++)
-                _cells[i] = CellData.Empty;
-        }
-
         public BoardData(BoardSize size, CellData[] cells)
         {
             if (cells == null)
@@ -51,6 +30,19 @@ namespace OpenMyGame.Core.Board.Data
             return _cells[ToIndex(coordinates)];
         }
 
+        public int IndexByID(int id)
+        {
+            for (var i = 0; i < _cells.Length; i++)
+            {
+                var cell = _cells[i];
+
+                if (cell.BlockId == id)
+                    return i;
+            }
+
+            return -1;
+        }
+
         public void SetCell(BoardCoordinates coordinates, CellData cell)
         {
             ValidateCoordinates(coordinates);
@@ -60,11 +52,6 @@ namespace OpenMyGame.Core.Board.Data
         public bool IsInside(BoardCoordinates coordinates)
         {
             return Size.IsInside(coordinates);
-        }
-
-        public BoardData Clone()
-        {
-            return new BoardData(Size, _cells);
         }
 
         public int ToIndex(BoardCoordinates coordinates)
@@ -77,8 +64,8 @@ namespace OpenMyGame.Core.Board.Data
             if (index < 0 || index >= _cells.Length)
                 throw new ArgumentOutOfRangeException(nameof(index));
 
-            int x = index % Width;
-            int y = index / Width;
+            var x = index % Width;
+            var y = index / Width;
             return new BoardCoordinates(x, y);
         }
 

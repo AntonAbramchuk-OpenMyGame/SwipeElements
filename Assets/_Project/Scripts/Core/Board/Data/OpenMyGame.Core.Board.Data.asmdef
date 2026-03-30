@@ -1,0 +1,14 @@
+{
+    "name": "OpenMyGame.Core.Board.Data",
+    "rootNamespace": "OpenMyGame.Core.Board.Data",
+    "references": [],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

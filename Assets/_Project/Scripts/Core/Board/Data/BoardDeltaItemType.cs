@@ -2,9 +2,7 @@
 {
     public enum BoardDeltaItemType
     {
-        Unknown = 0,
-        Set = 1,
-        Move = 2,
-        Destroy = 3
+        Move,
+        Destroy
     }
 }

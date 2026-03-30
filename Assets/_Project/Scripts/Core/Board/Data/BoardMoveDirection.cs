@@ -2,10 +2,9 @@
 {
     public enum BoardMoveDirection
     {
-        Unknown = 0,
-        Up = 1,
-        Right = 2,
-        Down = 3,
-        Left = 4
+        Up = 0,
+        Right = 1,
+        Down = 2,
+        Left = 3
     }
 }
