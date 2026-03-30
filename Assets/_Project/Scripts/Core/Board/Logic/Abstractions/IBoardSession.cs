@@ -7,7 +7,6 @@ namespace OpenMyGame.Core.Board.Logic.Abstractions
     public interface IBoardSession
     {
         BoardData BoardData { get; }
-        bool IsInitialized { get; }
 
         void Initialize(LevelConfigData levelConfigData);
         void Initialize(BoardSaveData boardSaveData);

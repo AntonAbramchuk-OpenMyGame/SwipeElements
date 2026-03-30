@@ -14,7 +14,7 @@ namespace OpenMyGame.Core.Progress.Logic
 
         public void Initialize()
         {
-            string filePath = GetFilePath();
+            var filePath = GetFilePath();
 
             if (!File.Exists(filePath))
             {
@@ -24,7 +24,7 @@ namespace OpenMyGame.Core.Progress.Logic
 
             try
             {
-                string json = File.ReadAllText(filePath);
+                var json = File.ReadAllText(filePath);
 
                 if (string.IsNullOrWhiteSpace(json))
                 {
@@ -32,7 +32,7 @@ namespace OpenMyGame.Core.Progress.Logic
                     return;
                 }
 
-                GameProgressData progressData = JsonUtility.FromJson<GameProgressData>(json);
+                var progressData = JsonUtility.FromJson<GameProgressData>(json);
                 NormalizeProgressData(progressData);
 
                 if (!IsValid(progressData))
@@ -73,7 +73,7 @@ namespace OpenMyGame.Core.Progress.Logic
             if (boardSaveData == null)
                 throw new ArgumentNullException(nameof(boardSaveData));
 
-            GameProgressData progressData = GetOrCreateProgressData();
+            var progressData = GetOrCreateProgressData();
 
             progressData.activeLevelSnapshot = new LevelRunSnapshotData
             {
@@ -86,7 +86,7 @@ namespace OpenMyGame.Core.Progress.Logic
 
         public void MarkLevelCompleted()
         {
-            GameProgressData progressData = GetOrCreateProgressData();
+            var progressData = GetOrCreateProgressData();
 
             progressData.completedLevelsCount++;
             progressData.activeLevelSnapshot = null;
@@ -101,8 +101,8 @@ namespace OpenMyGame.Core.Progress.Logic
             if (!IsValid(progressData))
                 throw new ArgumentException("[GameProgressService] Progress data is invalid.");
 
-            string json = JsonUtility.ToJson(progressData, true);
-            string filePath = GetFilePath();
+            var json = JsonUtility.ToJson(progressData, true);
+            var filePath = GetFilePath();
 
             File.WriteAllText(filePath, json);
             _cachedProgressData = progressData;
@@ -124,12 +124,12 @@ namespace OpenMyGame.Core.Progress.Logic
 
         private static void NormalizeProgressData(GameProgressData progressData)
         {
-            LevelRunSnapshotData snapshot = progressData?.activeLevelSnapshot;
+            var snapshot = progressData?.activeLevelSnapshot;
 
             if (snapshot == null)
                 return;
 
-            bool isEmptySnapshot =
+            var isEmptySnapshot =
                 string.IsNullOrWhiteSpace(snapshot.levelId) ||
                 snapshot.board?.cells == null ||
                 snapshot.board.cells.Length == 0;
@@ -154,7 +154,7 @@ namespace OpenMyGame.Core.Progress.Logic
             if (string.IsNullOrWhiteSpace(progressData.activeLevelSnapshot.levelId))
                 return false;
 
-            BoardSaveData board = progressData.activeLevelSnapshot.board;
+            var board = progressData.activeLevelSnapshot.board;
 
             if (board == null)
                 return false;
@@ -165,7 +165,7 @@ namespace OpenMyGame.Core.Progress.Logic
             if (board.cells == null)
                 return false;
 
-            int expectedCount = board.width * board.height;
+            var expectedCount = board.width * board.height;
             return board.cells.Length == expectedCount;
         }
 

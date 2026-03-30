@@ -20,16 +20,16 @@ namespace OpenMyGame.Core.Background
             _activeRoot = activeRoot;
             _poolRoot = poolRoot;
 
-            for (int i = 0; i < prewarmCount; i++)
+            for (var i = 0; i < prewarmCount; i++)
             {
-                BalloonView item = CreateInstance();
+                var item = CreateInstance();
                 Return(item);
             }
         }
 
         public BalloonView Get()
         {
-            BalloonView item = _items.Count > 0
+            var item = _items.Count > 0
                 ? _items.Pop()
                 : CreateInstance();
 

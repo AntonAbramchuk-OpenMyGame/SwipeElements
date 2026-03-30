@@ -8,6 +8,8 @@ namespace OpenMyGame.Core.Board.Data
         public readonly int Width;
         public readonly int Height;
 
+        public int CellCount => Width * Height;
+
         public BoardSize(int width, int height)
         {
             if (width <= 0)
@@ -19,8 +21,6 @@ namespace OpenMyGame.Core.Board.Data
             Width = width;
             Height = height;
         }
-
-        public int CellCount => Width * Height;
 
         public bool IsInside(BoardCoordinates coordinates)
         {

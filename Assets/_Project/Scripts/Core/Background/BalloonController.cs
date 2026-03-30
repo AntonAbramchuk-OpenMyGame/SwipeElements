@@ -100,7 +100,7 @@ namespace OpenMyGame.Core.Background
             if (!_isRunning)
                 return;
 
-            float deltaTime = Time.deltaTime;
+            var deltaTime = Time.deltaTime;
 
             TickActiveBalloons(deltaTime);
             TickSpawner(deltaTime);
@@ -134,7 +134,7 @@ namespace OpenMyGame.Core.Background
             _isRunning = false;
             _spawnTimer = 0f;
 
-            for (int i = _activeBalloons.Count - 1; i >= 0; i--)
+            for (var i = _activeBalloons.Count - 1; i >= 0; i--)
             {
                 _pool.Return(_activeBalloons[i]);
             }
@@ -153,17 +153,17 @@ namespace OpenMyGame.Core.Background
             if (poolRoot)
                 return;
 
-            GameObject poolObject = new GameObject("[BalloonPool]");
+            var poolObject = new GameObject("[BalloonPool]");
             poolObject.transform.SetParent(transform, false);
             poolRoot = poolObject.transform;
         }
 
         private void TickActiveBalloons(float deltaTime)
         {
-            for (int i = _activeBalloons.Count - 1; i >= 0; i--)
+            for (var i = _activeBalloons.Count - 1; i >= 0; i--)
             {
-                BalloonView balloon = _activeBalloons[i];
-                bool completed = balloon.Tick(deltaTime);
+                var balloon = _activeBalloons[i];
+                var completed = balloon.Tick(deltaTime);
 
                 if (!completed)
                     continue;
@@ -193,10 +193,10 @@ namespace OpenMyGame.Core.Background
             if (_activeBalloons.Count >= maxActiveCount)
                 return false;
 
-            BalloonView.FlightData flightData = CreateFlightData();
-            BalloonView balloon = _pool.Get();
+            var flightData = CreateFlightData();
+            var balloon = _pool.Get();
 
-            int sortingOrder = Random.Range(minSortingOrder, maxSortingOrder + 1);
+            var sortingOrder = Random.Range(minSortingOrder, maxSortingOrder + 1);
             balloon.SetSortingOrder(sortingOrder);
             balloon.Play(flightData, OnBalloonClicked);
 
@@ -206,25 +206,25 @@ namespace OpenMyGame.Core.Background
 
         private BalloonView.FlightData CreateFlightData()
         {
-            CameraBounds bounds = GetCameraBounds();
+            var bounds = GetCameraBounds();
 
-            bool leftToRight = Random.value < 0.5f;
+            var leftToRight = Random.value < 0.5f;
 
-            float startY = ViewportToWorldY(Random.Range(minViewportY, maxViewportY));
-            float endY = startY + Random.Range(-maxEndYOffset, maxEndYOffset);
+            var startY = ViewportToWorldY(Random.Range(minViewportY, maxViewportY));
+            var endY = startY + Random.Range(-maxEndYOffset, maxEndYOffset);
 
-            float startX = leftToRight
+            var startX = leftToRight
                 ? bounds.Left - spawnOffsetX
                 : bounds.Right + spawnOffsetX;
 
-            float endX = leftToRight
+            var endX = leftToRight
                 ? bounds.Right + despawnOffsetX
                 : bounds.Left - despawnOffsetX;
 
             Vector3 startPosition = new(startX, startY, zPosition);
             Vector3 endPosition = new(endX, endY, zPosition);
 
-            float scale = randomizeScale
+            var scale = randomizeScale
                 ? Random.Range(minScale, maxScale)
                 : 1f;
 
@@ -250,10 +250,10 @@ namespace OpenMyGame.Core.Background
 
         private CameraBounds GetCameraBounds()
         {
-            float distance = Mathf.Abs(zPosition - targetCamera.transform.position.z);
+            var distance = Mathf.Abs(zPosition - targetCamera.transform.position.z);
 
-            Vector3 leftBottom = targetCamera.ViewportToWorldPoint(new Vector3(0f, 0f, distance));
-            Vector3 rightTop = targetCamera.ViewportToWorldPoint(new Vector3(1f, 1f, distance));
+            var leftBottom = targetCamera.ViewportToWorldPoint(new Vector3(0f, 0f, distance));
+            var rightTop = targetCamera.ViewportToWorldPoint(new Vector3(1f, 1f, distance));
 
             return new CameraBounds(
                 left: leftBottom.x,
@@ -263,14 +263,14 @@ namespace OpenMyGame.Core.Background
 
         private float ViewportToWorldY(float viewportY)
         {
-            float distance = Mathf.Abs(zPosition - targetCamera.transform.position.z);
-            Vector3 point = targetCamera.ViewportToWorldPoint(new Vector3(0f, viewportY, distance));
+            var distance = Mathf.Abs(zPosition - targetCamera.transform.position.z);
+            var point = targetCamera.ViewportToWorldPoint(new Vector3(0f, viewportY, distance));
             return point.y;
         }
 
         private void OnBalloonClicked(BalloonView balloon)
         {
-            int index = _activeBalloons.IndexOf(balloon);
+            var index = _activeBalloons.IndexOf(balloon);
             if (index < 0)
                 return;
 

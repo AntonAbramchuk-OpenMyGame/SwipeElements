@@ -2,9 +2,9 @@ using System;
 
 namespace OpenMyGame.Core.Board.Data
 {
-    public struct CellData : IEquatable<CellData>
+    public readonly struct CellData : IEquatable<CellData>
     {
-        public const int EmptyBlockTypeId = -1;
+        private const int EmptyBlockTypeId = -1;
         public const int EmptyBlockId = -1;
 
         public readonly int BlockTypeId;
@@ -12,15 +12,10 @@ namespace OpenMyGame.Core.Board.Data
 
         public bool IsEmpty => BlockTypeId == EmptyBlockTypeId;
 
-        public CellData(int blockTypeId, int blockId)
+        private CellData(int blockTypeId, int blockId)
         {
             BlockTypeId = blockTypeId;
             BlockId = blockId;
-        }
-
-        public bool IsMatch(CellData other)
-        {
-            return IsMatch(other.BlockTypeId);
         }
 
         public bool IsMatch(int otherTypeId)

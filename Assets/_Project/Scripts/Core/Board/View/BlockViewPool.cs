@@ -29,15 +29,15 @@ namespace OpenMyGame.Core.Board.View
 
         public BlockView Get(int blockTypeId, Transform parent)
         {
-            if (!_prefabsByType.TryGetValue(blockTypeId, out BlockView prefab) || !prefab)
+            if (!_prefabsByType.TryGetValue(blockTypeId, out var prefab) || !prefab)
             {
                 Debug.LogError($"[BlockViewPool] No prefab for BlockTypeId={blockTypeId}");
                 return null;
             }
 
-            if (_poolByType.TryGetValue(blockTypeId, out Stack<BlockView> pool) && pool.Count > 0)
+            if (_poolByType.TryGetValue(blockTypeId, out var pool) && pool.Count > 0)
             {
-                BlockView blockView = pool.Pop();
+                var blockView = pool.Pop();
 
                 if (!blockView)
                 {
@@ -58,9 +58,9 @@ namespace OpenMyGame.Core.Board.View
             if (!blockView)
                 return;
 
-            int blockTypeId = blockView.BlockTypeId;
+            var blockTypeId = blockView.BlockTypeId;
 
-            if (!_poolByType.TryGetValue(blockTypeId, out Stack<BlockView> pool) || pool == null)
+            if (!_poolByType.TryGetValue(blockTypeId, out var pool) || pool == null)
             {
                 Debug.LogError($"[BlockViewPool] No pool for BlockTypeId={blockTypeId}");
 
@@ -80,11 +80,11 @@ namespace OpenMyGame.Core.Board.View
 
         public void Dispose()
         {
-            foreach (Stack<BlockView> pool in _poolByType.Values)
+            foreach (var pool in _poolByType.Values)
             {
                 while (pool.Count > 0)
                 {
-                    BlockView blockView = pool.Pop();
+                    var blockView = pool.Pop();
 
                     if (blockView)
                     {

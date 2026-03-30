@@ -11,7 +11,7 @@ namespace OpenMyGame.Core.Background
         private FlightState _flightState;
         private Action<BalloonView> _onPointerDown;
 
-        public bool IsPlaying { get; private set; }
+        private bool IsPlaying { get; set; }
 
         public void Play(FlightData flightData, Action<BalloonView> onPointerDown)
         {
@@ -35,25 +35,25 @@ namespace OpenMyGame.Core.Background
 
             _flightState.Elapsed += deltaTime;
 
-            float normalizedTime = _flightState.Elapsed / _flightState.Duration;
+            var normalizedTime = _flightState.Elapsed / _flightState.Duration;
             if (normalizedTime > 1f)
                 normalizedTime = 1f;
 
-            Vector3 linearPosition = Vector3.LerpUnclamped(
+            var linearPosition = Vector3.LerpUnclamped(
                 _flightState.StartPosition,
                 _flightState.EndPosition,
                 normalizedTime);
 
-            float pathSine = Mathf.Sin(
+            var pathSine = Mathf.Sin(
                 normalizedTime * _flightState.PathFrequency * Mathf.PI * 2f + _flightState.PathPhase);
 
-            Vector3 pathOffset = _flightState.Perpendicular * (_flightState.PathAmplitude * pathSine);
+            var pathOffset = _flightState.Perpendicular * (_flightState.PathAmplitude * pathSine);
             transform.position = linearPosition + pathOffset;
 
-            float rotationSine = Mathf.Sin(
+            var rotationSine = Mathf.Sin(
                 _flightState.Elapsed * _flightState.RotationFrequency * Mathf.PI * 2f + _flightState.RotationPhase);
 
-            float zRotation = _flightState.RotationAmplitude * rotationSine;
+            var zRotation = _flightState.RotationAmplitude * rotationSine;
             transform.rotation = Quaternion.Euler(0f, 0f, zRotation);
 
             if (_flightState.Elapsed < _flightState.Duration)
@@ -141,12 +141,12 @@ namespace OpenMyGame.Core.Background
 
             public static FlightState Create(FlightData data)
             {
-                Vector3 direction = data.EndPosition - data.StartPosition;
-                Vector3 perpendicular = Vector3.zero;
+                var direction = data.EndPosition - data.StartPosition;
+                var perpendicular = Vector3.zero;
 
                 if (direction.sqrMagnitude > 0.0001f)
                 {
-                    Vector3 normalized = direction.normalized;
+                    var normalized = direction.normalized;
                     perpendicular = new Vector3(-normalized.y, normalized.x, 0f);
                 }
 

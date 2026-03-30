@@ -12,7 +12,8 @@ namespace OpenMyGame.Core.Board.Logic
         private readonly IBoardFactory _boardFactory;
 
         public BoardData BoardData { get; private set; }
-        public bool IsInitialized => BoardData != null;
+
+        private bool IsInitialized => BoardData != null;
 
         public BoardSession(
             IBoardService boardService,

@@ -19,20 +19,18 @@ namespace OpenMyGame.Core.Level.Logic
 
         private bool _isInitialized;
 
-        public int LevelsCount => _levelIds.Count;
-
         public async UniTask InitializeAsync(CancellationToken cancellationToken)
         {
             if (_isInitialized)
                 return;
 
-            string catalogRelativePath = Path.Combine(LevelsFolderName, CatalogFileName);
-            string catalogJson = await LoadStreamingAssetTextAsync(catalogRelativePath, cancellationToken);
+            var catalogRelativePath = Path.Combine(LevelsFolderName, CatalogFileName);
+            var catalogJson = await LoadStreamingAssetTextAsync(catalogRelativePath, cancellationToken);
 
             if (string.IsNullOrWhiteSpace(catalogJson))
                 throw new Exception("[LevelProvider] Level catalog is empty.");
 
-            LevelCatalogDto catalogDto = JsonUtility.FromJson<LevelCatalogDto>(catalogJson);
+            var catalogDto = JsonUtility.FromJson<LevelCatalogDto>(catalogJson);
 
             if (catalogDto == null || catalogDto.LevelIds == null || catalogDto.LevelIds.Count == 0)
                 throw new Exception("[LevelProvider] Level catalog is invalid or empty.");
@@ -56,34 +54,38 @@ namespace OpenMyGame.Core.Level.Logic
             if (completedLevelsCount < 0)
                 throw new ArgumentOutOfRangeException(nameof(completedLevelsCount));
 
-            int index = completedLevelsCount % _levelIds.Count;
+            var index = completedLevelsCount % _levelIds.Count;
             return _levelIds[index];
         }
 
         public UniTask<LevelConfigData> LoadLevelByCompletedLevelsCountAsync(
             int completedLevelsCount,
-            CancellationToken cancellationToken)
+            CancellationToken cancellationToken
+        )
         {
-            string levelId = GetLevelIdByCompletedLevelsCount(completedLevelsCount);
+            var levelId = GetLevelIdByCompletedLevelsCount(completedLevelsCount);
             return LoadLevelByIdAsync(levelId, cancellationToken);
         }
 
-        public async UniTask<LevelConfigData> LoadLevelByIdAsync(string levelId, CancellationToken cancellationToken)
+        public async UniTask<LevelConfigData> LoadLevelByIdAsync(
+            string levelId,
+            CancellationToken cancellationToken
+        )
         {
             EnsureInitialized();
 
             if (!HasLevel(levelId))
                 throw new Exception($"[LevelProvider] Level does not exist in catalog: {levelId}");
 
-            string fileName = $"{levelId}.json";
-            string relativePath = Path.Combine(LevelsFolderName, fileName);
+            var fileName = $"{levelId}.json";
+            var relativePath = Path.Combine(LevelsFolderName, fileName);
 
-            string json = await LoadStreamingAssetTextAsync(relativePath, cancellationToken);
+            var json = await LoadStreamingAssetTextAsync(relativePath, cancellationToken);
 
             if (string.IsNullOrWhiteSpace(json))
                 throw new Exception($"[LevelProvider] Level json is empty: {levelId}");
 
-            LevelConfigData levelConfigData = JsonUtility.FromJson<LevelConfigData>(json);
+            var levelConfigData = JsonUtility.FromJson<LevelConfigData>(json);
 
             if (levelConfigData == null)
                 throw new Exception($"[LevelProvider] Failed to parse level json: {levelId}");
@@ -93,11 +95,12 @@ namespace OpenMyGame.Core.Level.Logic
 
         private static async UniTask<string> LoadStreamingAssetTextAsync(
             string relativePath,
-            CancellationToken cancellationToken)
+            CancellationToken cancellationToken
+        )
         {
-            string fullPath = Path.Combine(Application.streamingAssetsPath, relativePath);
+            var fullPath = Path.Combine(Application.streamingAssetsPath, relativePath);
 
-            using UnityWebRequest request = UnityWebRequest.Get(fullPath);
+            using var request = UnityWebRequest.Get(fullPath);
             await request.SendWebRequest().WithCancellation(cancellationToken);
 
             if (request.result != UnityWebRequest.Result.Success)

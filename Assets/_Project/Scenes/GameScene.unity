@@ -466,7 +466,7 @@ GameObject:
   - component: {fileID: 811962600}
   - component: {fileID: 811962599}
   m_Layer: 0
-  m_Name: TimeScaler
+  m_Name: '[DEBUG] TimeScaler'
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

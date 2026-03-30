@@ -7,17 +7,17 @@ namespace OpenMyGame.Core.Progress.Logic
     {
         public static BoardSaveData ToSaveData(BoardData boardData)
         {
-            int width = boardData.Width;
-            int height = boardData.Height;
+            var width = boardData.Width;
+            var height = boardData.Height;
 
-            CellSaveData[] cells = new CellSaveData[width * height];
-            int index = 0;
+            var cells = new CellSaveData[width * height];
+            var index = 0;
 
-            for (int y = 0; y < height; y++)
+            for (var y = 0; y < height; y++)
             {
-                for (int x = 0; x < width; x++)
+                for (var x = 0; x < width; x++)
                 {
-                    CellData cellData = boardData.GetCell(new BoardCoordinates(x, y));
+                    var cellData = boardData.GetCell(new BoardCoordinates(x, y));
 
                     cells[index++] = new CellSaveData
                     {

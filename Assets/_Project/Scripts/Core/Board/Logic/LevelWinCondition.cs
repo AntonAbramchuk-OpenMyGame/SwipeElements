@@ -7,11 +7,11 @@ namespace OpenMyGame.Core.Board.Logic
     {
         public bool IsCompleted(BoardData boardData)
         {
-            for (int y = 0; y < boardData.Height; y++)
+            for (var y = 0; y < boardData.Height; y++)
             {
-                for (int x = 0; x < boardData.Width; x++)
+                for (var x = 0; x < boardData.Width; x++)
                 {
-                    CellData cell = boardData.GetCell(new BoardCoordinates(x, y));
+                    var cell = boardData.GetCell(new BoardCoordinates(x, y));
 
                     if (!cell.IsEmpty)
                         return false;

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using DG.Tweening;
 using OpenMyGame.Core.Board.Data;
 using OpenMyGame.Core.Board.Logic.Abstractions;
+using OpenMyGame.Core.Board.Utils;
 using OpenMyGame.Core.Board.View.Abstractions;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -58,9 +59,9 @@ namespace OpenMyGame.Core.Board.View
             _boardSize = boardData.Size;
             AdjustBoardAndCamera();
 
-            for (int y = 0; y < boardData.Height; y++)
+            for (var y = 0; y < boardData.Height; y++)
             {
-                for (int x = 0; x < boardData.Width; x++)
+                for (var x = 0; x < boardData.Width; x++)
                 {
                     var coord = new BoardCoordinates(x, y);
                     var cellData = boardData.GetCell(coord);
@@ -75,17 +76,17 @@ namespace OpenMyGame.Core.Board.View
 
         public void ApplyMoveStep(BoardDelta delta, Action<BoardDelta> onComplete)
         {
-            int capturedViewVersion = _viewVersion;
-            TweenBatchCompletion completion = new(() => _viewVersion == capturedViewVersion, delta, onComplete);
+            var capturedViewVersion = _viewVersion;
+            var completion = new TweenBatchCompletion(() => _viewVersion == capturedViewVersion, delta, onComplete);
 
             foreach (var item in delta.Items)
             {
                 if (!item.IsMove)
                     continue;
 
-                int blockId = item.CurrentCell.BlockId;
+                var blockId = item.CurrentCell.BlockId;
 
-                if (!_blockViewsById.TryGetValue(blockId, out BlockView blockView) || !blockView)
+                if (!_blockViewsById.TryGetValue(blockId, out var blockView) || !blockView)
                 {
                     Debug.LogError($"[BoardView] ApplyMoveStep: no BlockView for blockId={blockId}");
                     continue;
@@ -93,8 +94,8 @@ namespace OpenMyGame.Core.Board.View
 
                 blockView.SetSorting(boardSortingLayerName, GetBlockSortingOrder(item.To));
 
-                Vector3 targetPosition = GetBlockWorldPosition(item.To);
-                Tween tween = blockView.PlayMove(targetPosition, MoveDuration);
+                var targetPosition = GetBlockWorldPosition(item.To);
+                var tween = blockView.PlayMove(targetPosition, MoveDuration);
 
                 completion.RegisterTween(tween);
             }
@@ -104,17 +105,17 @@ namespace OpenMyGame.Core.Board.View
 
         public void ApplyFallStep(BoardDelta delta, Action<BoardDelta> onComplete)
         {
-            int capturedViewVersion = _viewVersion;
-            TweenBatchCompletion completion = new(() => _viewVersion == capturedViewVersion, delta, onComplete);
+            var capturedViewVersion = _viewVersion;
+            var completion = new TweenBatchCompletion(() => _viewVersion == capturedViewVersion, delta, onComplete);
 
             foreach (var item in delta.Items)
             {
                 if (!item.IsMove)
                     continue;
 
-                int blockId = item.CurrentCell.BlockId;
+                var blockId = item.CurrentCell.BlockId;
 
-                if (!_blockViewsById.TryGetValue(blockId, out BlockView blockView) || !blockView)
+                if (!_blockViewsById.TryGetValue(blockId, out var blockView) || !blockView)
                 {
                     Debug.LogError($"[BoardView] ApplyFallStep: no BlockView for blockId={blockId}");
                     continue;
@@ -122,10 +123,10 @@ namespace OpenMyGame.Core.Board.View
 
                 blockView.SetSorting(boardSortingLayerName, GetBlockSortingOrder(item.To));
 
-                Vector3 targetPosition = GetBlockWorldPosition(item.To);
-                Vector3 currentPosition = blockView.transform.position;
+                var targetPosition = GetBlockWorldPosition(item.To);
+                var currentPosition = blockView.transform.position;
 
-                float distance = Vector3.Distance(currentPosition, targetPosition);
+                var distance = Vector3.Distance(currentPosition, targetPosition);
 
                 if (distance <= 0.0f)
                 {
@@ -133,8 +134,8 @@ namespace OpenMyGame.Core.Board.View
                     continue;
                 }
 
-                float duration = Mathf.Max(0.05f, distance / FallSpeed);
-                Tween tween = blockView.PlayFall(targetPosition, duration);
+                var duration = Mathf.Max(0.05f, distance / FallSpeed);
+                var tween = blockView.PlayFall(targetPosition, duration);
 
                 completion.RegisterTween(tween);
             }
@@ -144,23 +145,23 @@ namespace OpenMyGame.Core.Board.View
 
         public void ApplyDestroyStep(BoardDelta delta, Action<BoardDelta> onComplete)
         {
-            int capturedViewVersion = _viewVersion;
-            TweenBatchCompletion completion = new(() => _viewVersion == capturedViewVersion, delta, onComplete);
+            var capturedViewVersion = _viewVersion;
+            var completion = new TweenBatchCompletion(() => _viewVersion == capturedViewVersion, delta, onComplete);
 
             foreach (var item in delta.Items)
             {
                 if (!item.IsDestroy)
                     continue;
 
-                int blockId = item.PreviousCell.BlockId;
+                var blockId = item.PreviousCell.BlockId;
 
-                if (!_blockViewsById.TryGetValue(blockId, out BlockView blockView) || !blockView)
+                if (!_blockViewsById.TryGetValue(blockId, out var blockView) || !blockView)
                 {
                     Debug.LogError($"[BoardView] ApplyDestroyStep: no BlockView for blockId={blockId}");
                     continue;
                 }
 
-                Tween tween = blockView.PlayDestroy();
+                var tween = blockView.PlayDestroy();
 
                 completion.RegisterTween(tween, Release);
                 continue;
@@ -198,7 +199,7 @@ namespace OpenMyGame.Core.Board.View
                 return;
             }
 
-            BlockView blockView = _blockViewPool.Get(cellData.BlockTypeId, blocksRoot);
+            var blockView = _blockViewPool.Get(cellData.BlockTypeId, blocksRoot);
 
             if (!blockView)
             {
@@ -217,29 +218,27 @@ namespace OpenMyGame.Core.Board.View
 
         private void AdjustBoardAndCamera()
         {
-            float aspect = boardCamera.aspect;
+            var aspect = boardCamera.aspect;
 
-            Bounds backgroundBounds = backgroundRenderer.bounds;
-            float bgLeft = backgroundBounds.min.x;
-            float bgRight = backgroundBounds.max.x;
-            float bgBottom = backgroundBounds.min.y;
-            float bgTop = backgroundBounds.max.y;
-            float bgWidth = backgroundBounds.size.x;
-            float bgHeight = backgroundBounds.size.y;
+            var backgroundBounds = backgroundRenderer.bounds;
+            var bgBottom = backgroundBounds.min.y;
+            var bgTop = backgroundBounds.max.y;
+            var bgWidth = backgroundBounds.size.x;
+            var bgHeight = backgroundBounds.size.y;
 
-            float maxCameraSizeByHeight = bgHeight * 0.5f;
-            float maxCameraSizeByWidth = bgWidth / (2f * aspect);
-            float maxCameraSizeByBackground = Mathf.Min(maxCameraSizeByHeight, maxCameraSizeByWidth);
+            var maxCameraSizeByHeight = bgHeight * 0.5f;
+            var maxCameraSizeByWidth = bgWidth / (2f * aspect);
+            var maxCameraSizeByBackground = Mathf.Min(maxCameraSizeByHeight, maxCameraSizeByWidth);
 
-            float basePadding = baseCellSize;
+            var basePadding = baseCellSize;
 
-            float requiredSizeForBaseWidth =
+            var requiredSizeForBaseWidth =
                 (_boardSize.Width * baseCellSize + basePadding * 2f) / (2f * aspect);
 
-            float requiredSizeForBaseHeight =
+            var requiredSizeForBaseHeight =
                 (_boardSize.Height * baseCellSize + basePadding * 2f) * 0.5f;
 
-            float requiredCameraSizeForBaseCell =
+            var requiredCameraSizeForBaseCell =
                 Mathf.Max(minCameraSize, requiredSizeForBaseWidth, requiredSizeForBaseHeight);
 
             float finalCellSize;
@@ -252,21 +251,21 @@ namespace OpenMyGame.Core.Board.View
             }
             else
             {
-                float maxVisibleWidth = 2f * maxCameraSizeByBackground * aspect;
-                float maxVisibleHeight = 2f * maxCameraSizeByBackground;
+                var maxVisibleWidth = 2f * maxCameraSizeByBackground * aspect;
+                var maxVisibleHeight = 2f * maxCameraSizeByBackground;
 
-                float cellSizeByWidth = maxVisibleWidth / (_boardSize.Width + 2f);
-                float cellSizeByHeight = maxVisibleHeight / (_boardSize.Height + 2f);
+                var cellSizeByWidth = maxVisibleWidth / (_boardSize.Width + 2f);
+                var cellSizeByHeight = maxVisibleHeight / (_boardSize.Height + 2f);
 
                 finalCellSize = Mathf.Min(baseCellSize, cellSizeByWidth, cellSizeByHeight);
                 finalCellSize = Mathf.Max(finalCellSize, 0.0001f);
 
-                float finalPadding = finalCellSize;
+                var finalPadding = finalCellSize;
 
-                float sizeForWidth =
+                var sizeForWidth =
                     (_boardSize.Width * finalCellSize + finalPadding * 2f) / (2f * aspect);
 
-                float sizeForHeight =
+                var sizeForHeight =
                     (_boardSize.Height * finalCellSize + finalPadding * 2f) * 0.5f;
 
                 targetCameraSize = Mathf.Max(minCameraSize, sizeForWidth, sizeForHeight);
@@ -278,38 +277,35 @@ namespace OpenMyGame.Core.Board.View
 
             blocksRoot.localScale = Vector3.one;
 
-            Vector3 blocksRootPos = blocksRoot.position;
+            var blocksRootPos = blocksRoot.position;
             blocksRootPos.x = -((_boardSize.Width - 1) * _currentCellSize * 0.5f);
             blocksRoot.position = blocksRootPos;
 
-            float finalBoardWidth = _boardSize.Width * finalCellSize;
-            float finalBoardHeight = _boardSize.Height * finalCellSize;
-            float finalPaddingSize = finalCellSize;
+            var finalBoardHeight = _boardSize.Height * finalCellSize;
+            var finalPaddingSize = finalCellSize;
 
-            float boardBottomY = blocksRoot.position.y - finalCellSize * 0.5f;
-            float boardTopY = boardBottomY + finalBoardHeight;
+            var boardBottomY = blocksRoot.position.y - finalCellSize * 0.5f;
+            var boardTopY = boardBottomY + finalBoardHeight;
 
-            float cameraBottomIfAttachedToBackground = bgBottom;
-            float cameraTopIfAttachedToBackground = cameraBottomIfAttachedToBackground + 2f * targetCameraSize;
-
-            float requiredBoardTopWithPadding = boardTopY + finalPaddingSize;
+            var cameraTopIfAttachedToBottom = bgBottom + 2f * targetCameraSize;
+            var requiredBoardTopWithPadding = boardTopY + finalPaddingSize;
 
             float cameraBottom;
 
-            if (cameraTopIfAttachedToBackground >= requiredBoardTopWithPadding)
+            if (cameraTopIfAttachedToBottom >= requiredBoardTopWithPadding)
             {
                 cameraBottom = bgBottom;
             }
             else
             {
-                float desiredBottom = boardBottomY - finalPaddingSize;
-                float maxCameraBottom = bgTop - 2f * targetCameraSize;
+                var desiredBottom = boardBottomY - finalPaddingSize;
+                var maxCameraBottom = bgTop - 2f * targetCameraSize;
                 cameraBottom = Mathf.Clamp(desiredBottom, bgBottom, maxCameraBottom);
             }
 
             boardCamera.orthographicSize = targetCameraSize;
 
-            Vector3 cameraPos = boardCamera.transform.position;
+            var cameraPos = boardCamera.transform.position;
             cameraPos.y = cameraBottom + targetCameraSize;
             boardCamera.transform.position = cameraPos;
         }
@@ -319,7 +315,7 @@ namespace OpenMyGame.Core.Board.View
             List<BlockView> blockViews = new(_blockViewsById.Values);
             _blockViewsById.Clear();
 
-            foreach (BlockView blockView in blockViews)
+            foreach (var blockView in blockViews)
             {
                 if (!blockView)
                     continue;
@@ -366,7 +362,7 @@ namespace OpenMyGame.Core.Board.View
 
         private Vector3 GetBlockWorldPosition(BoardCoordinates coord)
         {
-            Vector3 blocksRootPosition = blocksRoot.position;
+            var blocksRootPosition = blocksRoot.position;
 
             return new Vector3(
                 blocksRootPosition.x + coord.X * _currentCellSize,
@@ -388,69 +384,6 @@ namespace OpenMyGame.Core.Board.View
 
             public int BlockTypeId => blockTypeId;
             public BlockView Prefab => prefab;
-        }
-
-        private sealed class TweenBatchCompletion
-        {
-            private readonly Func<bool> _isValidFunc;
-            private readonly BoardDelta _boardDelta;
-            private readonly Action<BoardDelta> _onComplete;
-
-            private int _remaining;
-            private bool _completed;
-
-            public TweenBatchCompletion(
-                Func<bool> isValidFunc,
-                BoardDelta boardDelta,
-                Action<BoardDelta> onComplete
-            )
-            {
-                _isValidFunc = isValidFunc;
-                _boardDelta = boardDelta;
-                _onComplete = onComplete;
-            }
-
-            public void RegisterTween(Tween tween, Action onCompleteOrKill = null)
-            {
-                _remaining++;
-
-                bool completedOrKilled = false;
-
-                void OnCompleteOrKill()
-                {
-                    if (completedOrKilled)
-                        return;
-
-                    completedOrKilled = true;
-                    _remaining--;
-
-                    if (!IsValid())
-                        return;
-
-                    onCompleteOrKill?.Invoke();
-                    CompleteIfEmpty();
-                }
-
-                tween.OnComplete(OnCompleteOrKill);
-                tween.OnKill(OnCompleteOrKill);
-            }
-
-            public void CompleteIfEmpty()
-            {
-                if (!IsValid())
-                    return;
-
-                if (_remaining > 0 || _completed)
-                    return;
-
-                _completed = true;
-                _onComplete?.Invoke(_boardDelta);
-            }
-
-            private bool IsValid()
-            {
-                return _isValidFunc?.Invoke() ?? false;
-            }
         }
     }
 }

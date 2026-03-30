@@ -34,20 +34,17 @@ namespace OpenMyGame.Core.Board.Logic
                     nameof(levelConfigData));
             }
 
-            CellData[] cells = new CellData[levelConfigData.Cells.Count];
-            int nextBlockId = 0;
+            var cells = new CellData[levelConfigData.Cells.Count];
+            var nextBlockId = 0;
 
-            // LevelConfigData.Cells are defined top-to-bottom, like a visual picture.
-            // BoardData uses bottom-to-top coordinates where y = 0 is the bottom row.
-            // So we invert Y while copying config data into runtime board data.
-            for (int i = 0; i < levelConfigData.Cells.Count; i++)
+            for (var i = 0; i < levelConfigData.Cells.Count; i++)
             {
-                int x = i % size.Width;
-                int yFromTop = i / size.Width;
-                int y = size.Height - 1 - yFromTop;
+                var x = i % size.Width;
+                var yFromTop = i / size.Width;
+                var y = size.Height - 1 - yFromTop;
 
-                int runtimeIndex = y * size.Width + x;
-                int blockTypeId = levelConfigData.Cells[i];
+                var runtimeIndex = y * size.Width + x;
+                var blockTypeId = levelConfigData.Cells[i];
 
                 if (blockTypeId < 0)
                 {
@@ -86,16 +83,11 @@ namespace OpenMyGame.Core.Board.Logic
                     nameof(boardSaveData));
             }
 
-            CellData[] cells = new CellData[size.CellCount];
+            var cells = new CellData[size.CellCount];
 
-            // ВАЖНО:
-            // SaveData уже хранится в runtime-порядке (bottom → top),
-            // т.е. в том же виде, как BoardData.
-            // Поэтому НИКАКОЙ инверсии Y делать не нужно.
-
-            for (int i = 0; i < boardSaveData.cells.Length; i++)
+            for (var i = 0; i < boardSaveData.cells.Length; i++)
             {
-                CellSaveData saveCell = boardSaveData.cells[i];
+                var saveCell = boardSaveData.cells[i];
 
                 if (saveCell.isEmpty)
                 {

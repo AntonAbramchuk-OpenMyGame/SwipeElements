@@ -46,7 +46,7 @@ namespace OpenMyGame.Core.Board.Logic
                 return;
             }
 
-            Vector2 delta = screenPosition - _pressScreenPosition;
+            var delta = screenPosition - _pressScreenPosition;
 
             if (delta.magnitude < SwipeThresholdPixels)
             {
@@ -54,7 +54,7 @@ namespace OpenMyGame.Core.Board.Logic
                 return;
             }
 
-            int cellIndex = _boardSession.BoardData.IndexByID(_pressedBlockId);
+            var cellIndex = _boardSession.BoardData.IndexByID(_pressedBlockId);
 
             if (cellIndex < 0)
             {
@@ -62,9 +62,9 @@ namespace OpenMyGame.Core.Board.Logic
                 return;
             }
 
-            BoardCoordinates origin = _boardSession.BoardData.ToCoordinates(cellIndex);
-            BoardMoveDirection direction = GetMoveDirection(delta);
-            BoardMove move = new BoardMove(origin, direction);
+            var origin = _boardSession.BoardData.ToCoordinates(cellIndex);
+            var direction = GetMoveDirection(delta);
+            var move = new BoardMove(origin, direction);
 
             _boardController.EnqueueMove(move);
 

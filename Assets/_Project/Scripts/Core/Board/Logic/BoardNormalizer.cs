@@ -10,10 +10,10 @@ namespace OpenMyGame.Core.Board.Logic
         {
             BoardDelta delta = new(BoardDeltaType.Fall);
 
-            int width = boardData.Size.Width;
-            int height = boardData.Size.Height;
+            var width = boardData.Size.Width;
+            var height = boardData.Size.Height;
 
-            for (int x = 0; x < width; x++)
+            for (var x = 0; x < width; x++)
             {
                 ApplyFallToColumn(boardData, x, height, delta);
             }
@@ -25,13 +25,13 @@ namespace OpenMyGame.Core.Board.Logic
         {
             BoardDelta delta = new(BoardDeltaType.Destroy);
 
-            List<List<BoardCoordinates>> destroyableGroups = FindDestroyableGroups(boardData);
+            var destroyableGroups = FindDestroyableGroups(boardData);
 
-            foreach (List<BoardCoordinates> group in destroyableGroups)
+            foreach (var group in destroyableGroups)
             {
-                foreach (BoardCoordinates coordinates in group)
+                foreach (var coordinates in group)
                 {
-                    CellData previousCell = boardData.GetCell(coordinates);
+                    var previousCell = boardData.GetCell(coordinates);
 
                     if (previousCell.IsEmpty)
                         continue;
@@ -48,14 +48,15 @@ namespace OpenMyGame.Core.Board.Logic
             BoardData boardData,
             int x,
             int height,
-            BoardDelta delta)
+            BoardDelta delta
+        )
         {
-            int targetY = 0;
+            var targetY = 0;
 
-            for (int y = 0; y < height; y++)
+            for (var y = 0; y < height; y++)
             {
                 BoardCoordinates from = new(x, y);
-                CellData cell = boardData.GetCell(from);
+                var cell = boardData.GetCell(from);
 
                 if (cell.IsEmpty)
                     continue;
@@ -76,27 +77,27 @@ namespace OpenMyGame.Core.Board.Logic
 
         private static List<List<BoardCoordinates>> FindDestroyableGroups(BoardData boardData)
         {
-            int width = boardData.Size.Width;
-            int height = boardData.Size.Height;
+            var width = boardData.Size.Width;
+            var height = boardData.Size.Height;
 
-            bool[] visited = new bool[width * height];
+            var visited = new bool[width * height];
             List<List<BoardCoordinates>> result = new();
 
-            for (int y = 0; y < height; y++)
+            for (var y = 0; y < height; y++)
             {
-                for (int x = 0; x < width; x++)
+                for (var x = 0; x < width; x++)
                 {
                     BoardCoordinates start = new(x, y);
-                    CellData startCell = boardData.GetCell(start);
+                    var startCell = boardData.GetCell(start);
 
                     if (startCell.IsEmpty)
                         continue;
 
-                    int index = boardData.ToIndex(start);
+                    var index = boardData.ToIndex(start);
                     if (visited[index])
                         continue;
 
-                    List<BoardCoordinates> group = CollectGroup(boardData, start, visited);
+                    var group = CollectGroup(boardData, start, visited);
 
                     if (HasLineOfThreeOrMore(group))
                     {
@@ -111,19 +112,20 @@ namespace OpenMyGame.Core.Board.Logic
         private static List<BoardCoordinates> CollectGroup(
             BoardData boardData,
             BoardCoordinates start,
-            bool[] visited)
+            bool[] visited
+        )
         {
             List<BoardCoordinates> group = new();
             Queue<BoardCoordinates> queue = new();
 
-            int groupTypeId = boardData.GetCell(start).BlockTypeId;
+            var groupTypeId = boardData.GetCell(start).BlockTypeId;
 
             queue.Enqueue(start);
             visited[boardData.ToIndex(start)] = true;
 
             while (queue.Count > 0)
             {
-                BoardCoordinates current = queue.Dequeue();
+                var current = queue.Dequeue();
                 group.Add(current);
 
                 EnqueueNeighbor(boardData, current.X + 1, current.Y, groupTypeId, visited, queue);
@@ -141,18 +143,19 @@ namespace OpenMyGame.Core.Board.Logic
             int y,
             int groupTypeId,
             bool[] visited,
-            Queue<BoardCoordinates> queue)
+            Queue<BoardCoordinates> queue
+        )
         {
             BoardCoordinates coordinates = new(x, y);
 
             if (!boardData.IsInside(coordinates))
                 return;
 
-            int index = boardData.ToIndex(coordinates);
+            var index = boardData.ToIndex(coordinates);
             if (visited[index])
                 return;
 
-            CellData cell = boardData.GetCell(coordinates);
+            var cell = boardData.GetCell(coordinates);
 
             if (cell.IsEmpty)
                 return;
@@ -168,18 +171,18 @@ namespace OpenMyGame.Core.Board.Logic
         {
             HashSet<BoardCoordinates> groupSet = new(group);
 
-            foreach (BoardCoordinates coordinates in group)
+            foreach (var coordinates in group)
             {
                 if (IsHorizontalLineStart(groupSet, coordinates))
                 {
-                    int horizontalLength = CountHorizontalLineLength(groupSet, coordinates);
+                    var horizontalLength = CountHorizontalLineLength(groupSet, coordinates);
                     if (horizontalLength >= 3)
                         return true;
                 }
 
                 if (IsVerticalLineStart(groupSet, coordinates))
                 {
-                    int verticalLength = CountVerticalLineLength(groupSet, coordinates);
+                    var verticalLength = CountVerticalLineLength(groupSet, coordinates);
                     if (verticalLength >= 3)
                         return true;
                 }
@@ -190,7 +193,8 @@ namespace OpenMyGame.Core.Board.Logic
 
         private static bool IsHorizontalLineStart(
             HashSet<BoardCoordinates> groupSet,
-            BoardCoordinates coordinates)
+            BoardCoordinates coordinates
+        )
         {
             BoardCoordinates left = new(coordinates.X - 1, coordinates.Y);
             return !groupSet.Contains(left);
@@ -198,7 +202,8 @@ namespace OpenMyGame.Core.Board.Logic
 
         private static bool IsVerticalLineStart(
             HashSet<BoardCoordinates> groupSet,
-            BoardCoordinates coordinates)
+            BoardCoordinates coordinates
+        )
         {
             BoardCoordinates down = new(coordinates.X, coordinates.Y - 1);
             return !groupSet.Contains(down);
@@ -206,10 +211,11 @@ namespace OpenMyGame.Core.Board.Logic
 
         private static int CountHorizontalLineLength(
             HashSet<BoardCoordinates> groupSet,
-            BoardCoordinates start)
+            BoardCoordinates start
+        )
         {
-            int length = 0;
-            int x = start.X;
+            var length = 0;
+            var x = start.X;
 
             while (groupSet.Contains(new BoardCoordinates(x, start.Y)))
             {
@@ -222,10 +228,11 @@ namespace OpenMyGame.Core.Board.Logic
 
         private static int CountVerticalLineLength(
             HashSet<BoardCoordinates> groupSet,
-            BoardCoordinates start)
+            BoardCoordinates start
+        )
         {
-            int length = 0;
-            int y = start.Y;
+            var length = 0;
+            var y = start.Y;
 
             while (groupSet.Contains(new BoardCoordinates(start.X, y)))
             {
