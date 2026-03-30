@@ -1,7 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Threading;
-using Cysharp.Threading.Tasks;
 using OpenMyGame.Core.Progress.Data;
 using OpenMyGame.Core.Progress.Logic.Abstractions;
 using UnityEngine;
@@ -14,14 +12,14 @@ namespace OpenMyGame.Core.Progress.Logic
 
         private GameProgressData _cachedProgressData;
 
-        public UniTask InitializeAsync(CancellationToken cancellationToken)
+        public void Initialize()
         {
             string filePath = GetFilePath();
 
             if (!File.Exists(filePath))
             {
                 _cachedProgressData = null;
-                return UniTask.CompletedTask;
+                return;
             }
 
             try
@@ -31,17 +29,19 @@ namespace OpenMyGame.Core.Progress.Logic
                 if (string.IsNullOrWhiteSpace(json))
                 {
                     _cachedProgressData = null;
-                    return UniTask.CompletedTask;
+                    return;
                 }
 
                 GameProgressData progressData = JsonUtility.FromJson<GameProgressData>(json);
+                NormalizeProgressData(progressData);
 
                 if (!IsValid(progressData))
                 {
                     Debug.LogWarning("[GameProgressService] Save file is invalid. Progress will be cleared.");
+
                     SafeDeleteFile(filePath);
                     _cachedProgressData = null;
-                    return UniTask.CompletedTask;
+                    return;
                 }
 
                 _cachedProgressData = progressData;
@@ -49,21 +49,55 @@ namespace OpenMyGame.Core.Progress.Logic
             catch (Exception exception)
             {
                 Debug.LogException(exception);
+
                 SafeDeleteFile(filePath);
                 _cachedProgressData = null;
             }
-
-            return UniTask.CompletedTask;
         }
 
-        public bool TryGetProgress(out GameProgressData progressData)
+        public int GetCompletedLevelsCount()
         {
-            progressData = _cachedProgressData;
-            return progressData != null;
+            return _cachedProgressData?.completedLevelsCount ?? 0;
         }
 
-        public UniTask SaveAsync(GameProgressData progressData, CancellationToken cancellationToken)
+        public LevelRunSnapshotData GetLevelRunSnapshot()
         {
+            return _cachedProgressData?.activeLevelSnapshot;
+        }
+
+        public void SaveCurrentRun(string levelId, BoardSaveData boardSaveData)
+        {
+            if (string.IsNullOrWhiteSpace(levelId))
+                throw new ArgumentException(nameof(levelId));
+
+            if (boardSaveData == null)
+                throw new ArgumentNullException(nameof(boardSaveData));
+
+            GameProgressData progressData = GetOrCreateProgressData();
+
+            progressData.activeLevelSnapshot = new LevelRunSnapshotData
+            {
+                levelId = levelId,
+                board = boardSaveData
+            };
+
+            SaveInternal(progressData);
+        }
+
+        public void MarkLevelCompleted()
+        {
+            GameProgressData progressData = GetOrCreateProgressData();
+
+            progressData.completedLevelsCount++;
+            progressData.activeLevelSnapshot = null;
+
+            SaveInternal(progressData);
+        }
+
+        private void SaveInternal(GameProgressData progressData)
+        {
+            NormalizeProgressData(progressData);
+
             if (!IsValid(progressData))
                 throw new ArgumentException("[GameProgressService] Progress data is invalid.");
 
@@ -72,18 +106,15 @@ namespace OpenMyGame.Core.Progress.Logic
 
             File.WriteAllText(filePath, json);
             _cachedProgressData = progressData;
-
-            return UniTask.CompletedTask;
         }
 
-        public UniTask ClearAsync(CancellationToken cancellationToken)
+        private GameProgressData GetOrCreateProgressData()
         {
-            string filePath = GetFilePath();
-
-            SafeDeleteFile(filePath);
-            _cachedProgressData = null;
-
-            return UniTask.CompletedTask;
+            return _cachedProgressData ?? new GameProgressData
+            {
+                completedLevelsCount = 0,
+                activeLevelSnapshot = null
+            };
         }
 
         private static string GetFilePath()
@@ -91,12 +122,27 @@ namespace OpenMyGame.Core.Progress.Logic
             return Path.Combine(Application.persistentDataPath, FileName);
         }
 
+        private static void NormalizeProgressData(GameProgressData progressData)
+        {
+            LevelRunSnapshotData snapshot = progressData?.activeLevelSnapshot;
+
+            if (snapshot == null)
+                return;
+
+            bool isEmptySnapshot =
+                string.IsNullOrWhiteSpace(snapshot.levelId) ||
+                snapshot.board?.cells == null ||
+                snapshot.board.cells.Length == 0;
+
+            if (isEmptySnapshot)
+            {
+                progressData.activeLevelSnapshot = null;
+            }
+        }
+
         private static bool IsValid(GameProgressData progressData)
         {
             if (progressData == null)
-                return false;
-
-            if (progressData.version <= 0)
                 return false;
 
             if (progressData.completedLevelsCount < 0)
@@ -128,9 +174,7 @@ namespace OpenMyGame.Core.Progress.Logic
             try
             {
                 if (File.Exists(filePath))
-                {
                     File.Delete(filePath);
-                }
             }
             catch (Exception exception)
             {

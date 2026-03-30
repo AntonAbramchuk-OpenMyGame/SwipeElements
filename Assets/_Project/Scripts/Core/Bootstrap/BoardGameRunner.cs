@@ -60,7 +60,7 @@ namespace OpenMyGame.Core.Bootstrap
             _gameHudView.NextClicked += OnNextClicked;
             _gameHudView.HideWinScreen();
 
-            RunGuarded(InitializeCoreAsync);
+            RunGuarded(InitializeCoreAsync, true);
         }
 
         public void Dispose()
@@ -76,31 +76,22 @@ namespace OpenMyGame.Core.Bootstrap
             _cts = null;
         }
 
-        // ---------------------------------------------------------------------
-        // Startup
-        // ---------------------------------------------------------------------
-
         private async UniTask InitializeCoreAsync(CancellationToken cancellationToken)
         {
             await _levelProvider.InitializeAsync(cancellationToken);
-            await _gameProgressService.InitializeAsync(cancellationToken);
+            _gameProgressService.Initialize();
 
-            if (_gameProgressService.TryGetProgress(out GameProgressData progressData))
-            {
-                if (TryRestoreSavedRun(progressData))
-                    return;
+            var levelRunSnapshot = _gameProgressService.GetLevelRunSnapshot();
 
-                await StartLevelByProgressAsync(progressData.completedLevelsCount, cancellationToken);
+            if (TryRestoreSavedRun(levelRunSnapshot))
                 return;
-            }
 
-            await StartLevelByProgressAsync(0, cancellationToken);
+            var completedLevelsCount = _gameProgressService.GetCompletedLevelsCount();
+            await StartLevelByProgressAsync(completedLevelsCount, cancellationToken);
         }
 
-        private bool TryRestoreSavedRun(GameProgressData progressData)
+        private bool TryRestoreSavedRun(LevelRunSnapshotData snapshot)
         {
-            LevelRunSnapshotData snapshot = progressData.activeLevelSnapshot;
-
             if (snapshot == null)
                 return false;
 
@@ -123,10 +114,6 @@ namespace OpenMyGame.Core.Bootstrap
             return true;
         }
 
-        // ---------------------------------------------------------------------
-        // Level flow
-        // ---------------------------------------------------------------------
-
         private async UniTask StartLevelByProgressAsync(int completedLevelsCount, CancellationToken cancellationToken)
         {
             var levelConfig =
@@ -138,12 +125,12 @@ namespace OpenMyGame.Core.Bootstrap
             _boardSession.Initialize(levelConfig);
             _boardView.Build(_boardSession.BoardData);
 
-            await SaveCurrentRunAsync(completedLevelsCount, cancellationToken);
+            SaveCurrentRun();
         }
 
         private async UniTask RestartCurrentLevelAsync(CancellationToken cancellationToken)
         {
-            int completedLevelsCount = GetCompletedLevelsCount();
+            var completedLevelsCount = _gameProgressService.GetCompletedLevelsCount();
 
             if (string.IsNullOrWhiteSpace(_currentLevelId))
             {
@@ -159,87 +146,65 @@ namespace OpenMyGame.Core.Bootstrap
             _boardSession.Initialize(levelConfig);
             _boardView.Build(_boardSession.BoardData);
 
-            await SaveCurrentRunAsync(completedLevelsCount, cancellationToken);
-        }
-
-        private async UniTask CompleteLevelAsync(CancellationToken cancellationToken)
-        {
-            int completedLevelsCount = GetCompletedLevelsCount() + 1;
-
-            GameProgressData progressData = new()
-            {
-                version = 1,
-                completedLevelsCount = completedLevelsCount,
-                activeLevelSnapshot = null
-            };
-
-            await _gameProgressService.SaveAsync(progressData, cancellationToken);
-            _gameHudView.ShowWinScreen();
+            SaveCurrentRun();
         }
 
         private async UniTask NextLevelAsync(CancellationToken cancellationToken)
         {
             _gameHudView.HideWinScreen();
-            await StartLevelByProgressAsync(GetCompletedLevelsCount(), cancellationToken);
+            await StartLevelByProgressAsync(_gameProgressService.GetCompletedLevelsCount(), cancellationToken);
         }
 
         private async UniTask SkipLevelAsync(CancellationToken cancellationToken)
         {
-            int completedLevelsCount = GetCompletedLevelsCount() + 1;
-            await StartLevelByProgressAsync(completedLevelsCount, cancellationToken);
+            _gameProgressService.MarkLevelCompleted();
+            await StartLevelByProgressAsync(_gameProgressService.GetCompletedLevelsCount(), cancellationToken);
         }
 
-        private UniTask SaveCurrentRunAsync(int completedLevelsCount, CancellationToken cancellationToken)
+        private void CompleteLevel()
         {
-            GameProgressData progressData = new()
-            {
-                version = 1,
-                completedLevelsCount = completedLevelsCount,
-                activeLevelSnapshot = new LevelRunSnapshotData
-                {
-                    levelId = _currentLevelId,
-                    board = BoardSaveMapper.ToSaveData(_boardSession.BoardData)
-                }
-            };
-
-            return _gameProgressService.SaveAsync(progressData, cancellationToken);
+            _gameProgressService.MarkLevelCompleted();
+            _gameHudView.ShowWinScreen();
         }
 
-        // ---------------------------------------------------------------------
-        // Events
-        // ---------------------------------------------------------------------
+        private void SaveCurrentRun()
+        {
+            _gameProgressService.SaveCurrentRun(
+                _currentLevelId,
+                BoardSaveMapper.ToSaveData(_boardSession.BoardData)
+            );
+        }
 
         private void OnBoardSettled()
         {
             if (_isTransitionInProgress)
                 return;
 
-            RunGuarded(ct => SaveCurrentRunAsync(GetCompletedLevelsCount(), ct));
+            SaveCurrentRun();
         }
 
         private void OnLevelCompleted()
         {
-            RunGuarded(CompleteLevelAsync, useTransitionLock: true);
+            if (_isTransitionInProgress)
+                return;
+
+            CompleteLevel();
         }
 
         private void OnNextClicked()
         {
-            RunGuarded(NextLevelAsync, useTransitionLock: true);
+            RunGuarded(NextLevelAsync, true);
         }
 
         private void OnRestartClicked()
         {
-            RunGuarded(RestartCurrentLevelAsync, useTransitionLock: true);
+            RunGuarded(RestartCurrentLevelAsync, true);
         }
 
         private void OnSkipClicked()
         {
-            RunGuarded(SkipLevelAsync, useTransitionLock: true);
+            RunGuarded(SkipLevelAsync, true);
         }
-
-        // ---------------------------------------------------------------------
-        // Board flow lifecycle
-        // ---------------------------------------------------------------------
 
         private void RecreateBoardFlow()
         {
@@ -269,20 +234,10 @@ namespace OpenMyGame.Core.Bootstrap
             _boardInput = null;
         }
 
-        // ---------------------------------------------------------------------
-        // Helpers
-        // ---------------------------------------------------------------------
-
-        private int GetCompletedLevelsCount()
-        {
-            return _gameProgressService.TryGetProgress(out GameProgressData progressData)
-                ? progressData.completedLevelsCount
-                : 0;
-        }
-
         private void RunGuarded(
             Func<CancellationToken, UniTask> action,
-            bool useTransitionLock = false)
+            bool useTransitionLock = false
+        )
         {
             if (_cts == null)
                 return;
@@ -295,9 +250,10 @@ namespace OpenMyGame.Core.Bootstrap
 
         private async UniTaskVoid RunGuardedInternal(
             Func<CancellationToken, UniTask> action,
-            bool useTransitionLock)
+            bool useTransitionLock
+        )
         {
-            CancellationToken cancellationToken = _cts.Token;
+            var cancellationToken = _cts.Token;
 
             if (useTransitionLock)
                 _isTransitionInProgress = true;
