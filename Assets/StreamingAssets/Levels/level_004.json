@@ -1,0 +1,9 @@
+{
+  "levelId": "level_004",
+  "width": 3,
+  "height": 2,
+  "cells": [
+    -1,0,-1,
+    0,0,-1
+  ]
+}

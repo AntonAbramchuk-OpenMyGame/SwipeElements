@@ -1,0 +1,14 @@
+{
+    "name": "OpenMyGame.Core.Background",
+    "rootNamespace": "OpenMyGame.Core.Background",
+    "references": [],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
