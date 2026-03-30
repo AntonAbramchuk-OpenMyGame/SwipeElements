@@ -50,6 +50,9 @@ Thumbs.db
 # IL2CPP build artifacts
 il2cppOutput/
 
+# Unity temp build files
+.utmp/
+
 # =========================
 # Addressables
 # =========================
